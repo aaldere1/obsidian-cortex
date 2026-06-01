@@ -1,6 +1,6 @@
 <!-- HERO -->
 <p align="center">
-  <img src="assets/hero.png" alt="Obsidian Cortex" width="100%" />
+  <img src="assets/hero.jpg" alt="Obsidian Cortex" width="100%" />
 </p>
 
 <h1 align="center">🪨 Obsidian Cortex</h1>
