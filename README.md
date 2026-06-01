@@ -81,7 +81,7 @@ You re-explain your stack. Your preferences. What you were doing yesterday. What
 
 ## ⚡ Quick start — *let the agent set itself up*
 
-> **Requirements:** [Obsidian](https://obsidian.md) · Git · Node 18+
+> **Requirements:** [Obsidian](https://obsidian.md) + [Obsidian Git plugin](https://github.com/Vinzent03/obsidian-git) (for real-time multi-machine sync) · Git · Node 18+
 
 Don't run setup by hand. Clone the vault, open your AI agent **inside it**, and hand it the goal:
 
@@ -224,13 +224,24 @@ AI Brain/
 
 ## 🛠️ Multi-machine sync
 
-Each machine clones the same vault repo, `git pull`s on session start, `git push`s on closeout:
+Each machine clones the same vault repo. Agents `git pull` on session start and `git push` on closeout — but for **real-time** background sync (so your desktop sees your laptop's changes seconds later, without an agent running), use the Obsidian Git plugin.
 
+### 🔌 Required for multi-machine: the Obsidian Git plugin
+
+> **[Obsidian Git](https://github.com/Vinzent03/obsidian-git)** (by Vinzent03) is what makes the vault sync across machines in real time. Install it on every machine.
+
+1. In Obsidian: **Settings → Community plugins → Browse → search "Git"** → install **Obsidian Git** → Enable.
+2. Configure it to **auto-pull on startup** and **auto-commit-and-push** on an interval (e.g. every 5–10 min).
+3. Now edits on any machine propagate to all the others automatically — no manual `git` needed.
+
+Without it, you'd be manually pulling/pushing (or relying on the agent to do it each session). With it, the brain is genuinely *live* across every device.
+
+For agents working headless (no Obsidian GUI), the manual pull still works:
 ```bash
 cd ~/Obsidian-Vault && git pull --rebase --autostash --quiet
 ```
 
-Full wiring guides for **Codex**, **Claude Code**, and **cron** live in [`AI Brain/docs/`](AI%20Brain/docs/).
+Full wiring guides for **Codex**, **Claude Code**, and **cron** live in [`AI Brain/docs/`](AI%20Brain/docs/), plus [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) for the full mental model and [`AGENT-BOOTSTRAP.md`](AGENT-BOOTSTRAP.md) for agent-driven new-machine setup.
 
 ---
 

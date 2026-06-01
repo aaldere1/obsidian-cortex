@@ -113,8 +113,15 @@ node "AI Brain/scripts/brain.mjs" status     # lists machines + projects
 node "AI Brain/scripts/brain.mjs" snapshot   # <MACHINE> = ACTIVE
 ```
 
-### 10. (Optional) Open in Obsidian
-**File → Open vault…** → select `~/Obsidian-Vault`. Enable the **Obsidian Git** community plugin for background auto-pull/commit. You don't need Obsidian (agents work against the filesystem directly), but it's a great GUI to browse and search memory.
+### 10. Open in Obsidian + install the Git sync plugin (do this for multi-machine)
+**File → Open vault…** → select `~/Obsidian-Vault`.
+
+**To sync across machines in real time, install [Obsidian Git](https://github.com/Vinzent03/obsidian-git):**
+- Settings → Community plugins → Browse → search **"Git"** → install **Obsidian Git** (by Vinzent03) → Enable.
+- Set it to **auto-pull on startup** and **auto-commit-and-push** every 5–10 minutes.
+- This is what keeps every machine's brain in sync automatically. Without it you'll be pulling/pushing by hand.
+
+You don't strictly need the Obsidian GUI (agents work against the filesystem directly), but the Git plugin is the cleanest way to get **real-time** cross-machine sync.
 
 ---
 
