@@ -10,7 +10,7 @@ If you only read one file in this vault, read this one.
 
 A single Obsidian vault that does three jobs at once:
 
-1. **Stores your raw stuff** — Notion exports, articles, attachments. Read-only to the AI; never modified.
+1. **Stores your raw stuff** — PDFs, articles, exports, attachments. Read-only to the AI; never modified.
 2. **Holds a wiki that compounds** — synthesis pages the AI writes for you, organized by topic, with cross-links. Grows every time you ingest a source or ask a substantive question.
 3. **Remembers what your AI agents are doing** — per-machine context, per-project state, session logs, daily rollups. So any agent on any machine picks up where the last one left off.
 
@@ -29,8 +29,8 @@ You write almost none of it. You curate, point at things, ask questions. The AI 
 ├── index.md                               ← catalog of wiki pages
 ├── log.md                                 ← chronological event log
 │
-├── NOTION/                                ← raw sources (~700MB, READ-ONLY)
-├── Skills/   MCPs/   Infrastructure/      ← existing entity wikis (one page per thing)
+├── Sources/                               ← raw reference material (READ-ONLY)
+├── Apps/   Tools/   Concepts/            ← existing entity wikis (one page per thing)
 ├── Synthesis/                             ← new LLM-maintained synthesis pages
 │   ├── Apps/        (one page per product)
 │   ├── People/      (one page per person)
@@ -49,7 +49,7 @@ You write almost none of it. You curate, point at things, ask questions. The AI 
 ```
 
 **The rule of thumb**:
-- Raw stuff (Notion, articles, attachments) → stays where it is, AI reads it
+- Raw reference material (PDFs, articles, exports) → stays where it is, AI reads it
 - New synthesis page you'd write yourself → goes in `Synthesis/<category>/`
 - Anything about *how the AI works* or *what was decided/done* → goes in `AI Brain/`
 

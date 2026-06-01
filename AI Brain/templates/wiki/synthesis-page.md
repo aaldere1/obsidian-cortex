@@ -29,9 +29,9 @@ Why this entity / concept / app deserves a page. Who cares, what depends on it.
 ## How it connects
 
 - Cross-links to related synthesis pages: `[[Related Page]]`
-- Cross-links to existing entity pages: `[[Infrastructure/Something]]`
+- Cross-links to existing entity pages: `[[Tools/Something]]`
 - Cross-links to agent memory: `[[AI Brain/Projects/<name>/Overview]]`
-- Cross-links to raw sources: paths under `NOTION/` etc.
+- Cross-links to raw sources: paths under `Sources/` etc.
 
 ## Open questions
 

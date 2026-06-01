@@ -94,7 +94,7 @@ Use the output to populate the `## Machine`, `## Vault Location`, and `## Tools 
 
 If either file already has real content (over ~700 bytes, or any bullet has a value after `:`), **leave it alone** — don't overwrite user-curated text.
 
-Briefly mention the fill-in to the user in your closing brief (one sentence, not a section): *"Filled in M3's Local Setup template since it was empty."*
+Briefly mention the fill-in to the user in your closing brief (one sentence, not a section): *"Filled in this machine's Local Setup template since it was empty."*
 
 ### 4. If a project is implied, read its memory
 
@@ -109,7 +109,7 @@ If no project memory exists for an obviously meaningful project, suggest creatin
 
 ### 5. Check the wiki index for related synthesis pages
 
-Read `index.md` (vault root). If the user's task overlaps with any entry under `Synthesis/`, `Infrastructure/`, or `MCPs/`, read those pages too.
+Read `index.md` (vault root). If the user's task overlaps with any entry under `Synthesis/` (or whatever knowledge folders you use), read those pages too.
 
 ### 6. Write Current Activity for this machine
 

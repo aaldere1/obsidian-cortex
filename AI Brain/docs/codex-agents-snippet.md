@@ -46,7 +46,7 @@ At the start of meaningful work:
    - `<VAULT>/AI Brain/Machines/<MACHINE>/Local Setup.md`
    - `<VAULT>/AI Brain/Machines/<MACHINE>/Working Projects.md` (if it exists)
    - `<VAULT>/AI Brain/Machines/<MACHINE>/Current Activity.md` (in-flight signal — overwritten on each session start)
-5. Read the wiki catalog: `<VAULT>/index.md`. If the task overlaps any synthesis page or entity (under `Synthesis/`, `Infrastructure/`, or `MCPs/`), read those pages too.
+5. Read the wiki catalog: `<VAULT>/index.md`. If the task overlaps any synthesis page or entity (under `Synthesis/` or your entity folders), read those pages too.
 6. If the current repo has a matching project under `<VAULT>/AI Brain/Projects/`, read that project's `Overview.md`, `Current State.md`, `Next Steps.md`, and `Decisions.md`.
 7. If no project memory exists and the work is meaningful, create it in AI Brain rather than adding memory files to the repo being worked on.
 8. Write Current Activity so other machines see this session is live:
@@ -94,7 +94,7 @@ node "AI Brain/scripts/brain.mjs" idle "<MACHINE>"
 node "AI Brain/scripts/brain.mjs" daily "<MACHINE>"
 ```
 
-Wiki workflow summary: `Synthesis/` is for LLM-maintained cross-cutting pages. `NOTION/` is read-only raw sources. `index.md` is the catalog. `log.md` is the chronological record. See `<VAULT>/AGENTS.md` for the full workflow (ingest/query/lint).
+Wiki workflow summary: `Synthesis/` is for LLM-maintained cross-cutting pages. `Sources/` is read-only raw reference material. `index.md` is the catalog. `log.md` is the chronological record. See `<VAULT>/AGENTS.md` for the full workflow (ingest/query/lint).
 
 Do not store secrets, credentials, raw terminal logs, or full chat transcripts in AI Brain. Store concise summaries, decisions, next steps, and open questions.
 
