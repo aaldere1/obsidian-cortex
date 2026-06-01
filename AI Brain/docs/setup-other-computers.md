@@ -1,6 +1,6 @@
 # Set Up The Brain On Another Computer
 
-Goal: bring a new machine to full parity with M5 in under 10 minutes. After this, any Claude Code or Codex session on the new machine will read from and write to the same `obsidian-personal` vault as every other machine.
+Goal: bring a new machine to full parity with your first machine in under 10 minutes. After this, any Claude Code or Codex session on the new machine will read from and write to the same `obsidian-cortex` vault as every other machine.
 
 This is the **one-shot onboarding**. Follow top to bottom. Estimated time: 5–10 minutes.
 
@@ -33,7 +33,7 @@ If Obsidian is installed, open this folder as a vault.
 
 ## 2. Pick a machine name
 
-The machine name is the folder under `AI Brain/Machines/`. It's how other machines see this computer in the snapshot. Pick something stable and short. Examples: `M5`, `MBP-Studio`, `Mac-Mini`, `Windows-Desktop`. **Use the exact same name forever** — renaming later orphans the history.
+The machine name is the folder under `AI Brain/Machines/`. It's how other machines see this computer in the snapshot. Pick something stable and short. Examples: `Laptop`, `MBP-Studio`, `Mac-Mini`, `Windows-Desktop`. **Use the exact same name forever** — renaming later orphans the history.
 
 For the rest of this doc, replace `<MACHINE>` with the name you picked.
 
@@ -83,10 +83,10 @@ You should see your new machine in the list with `ACTIVE` status.
 
 ### Claude Code
 
-Symlink or copy the three `brain-*` skills from your `~/.claude/skills/` directory. If you sync `~/.claude/` across machines (e.g. via dotfiles), skip this — they're already there. Otherwise copy them from M5:
+Symlink or copy the three `brain-*` skills from your `~/.claude/skills/` directory. If you sync `~/.claude/` across machines (e.g. via dotfiles), skip this — they're already there. Otherwise copy them from an existing machine:
 
 ```sh
-# from M5, copy to clipboard / file transfer / git, then on the new machine:
+# from an existing machine, copy to clipboard / file transfer / git, then on the new machine:
 mkdir -p ~/.claude/skills
 # place brain-startup, brain-closeout, brain-daily under ~/.claude/skills/
 ```
@@ -95,7 +95,7 @@ The three skills will then be auto-discovered by Claude Code on session start.
 
 ### Codex
 
-Add the AI Brain memory section to the global Codex AGENTS.md at `~/.codex/AGENTS.md`. The canonical version is in `~/Obsidian-Vault/AI Brain/docs/global-codex-instructions.md` — copy the relevant section into the new machine's `~/.codex/AGENTS.md` and replace any `M5` references with `<MACHINE>` and any `~/Obsidian-Vault` references with the actual path on the new machine.
+Add the AI Brain memory section to the global Codex AGENTS.md at `~/.codex/AGENTS.md`. The canonical version is in `~/Obsidian-Vault/AI Brain/docs/global-codex-instructions.md` — copy the relevant section into the new machine's `~/.codex/AGENTS.md` and replace any example machine-name references with `<MACHINE>` and any `~/Obsidian-Vault` references with the actual path on the new machine.
 
 ---
 

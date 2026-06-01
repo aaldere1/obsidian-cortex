@@ -106,8 +106,8 @@ The helper now supports:
 ```sh
 node "AI Brain/scripts/brain.mjs" status
 node "AI Brain/scripts/brain.mjs" scan-repos "/path/with/projects"
-node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "M5"
-node "AI Brain/scripts/brain.mjs" closeout "Project Name" "Short title" "M5" --summary "What changed" --next "Next action"
+node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "Laptop"
+node "AI Brain/scripts/brain.mjs" closeout "Project Name" "Short title" "Laptop" --summary "What changed" --next "Next action"
 ```
 
 This is the first safe automation layer:
@@ -122,7 +122,7 @@ This is the first safe automation layer:
 Build a draft summarizer that inspects local repo state and pre-fills closeout fields:
 
 ```sh
-node "AI Brain/scripts/brain.mjs" draft-closeout "Project Name" "/path/to/repo" "M5"
+node "AI Brain/scripts/brain.mjs" draft-closeout "Project Name" "/path/to/repo" "Laptop"
 ```
 
 It should inspect safe local sources only:

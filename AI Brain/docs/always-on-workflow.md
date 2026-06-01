@@ -13,7 +13,7 @@ This is not automatic raw transcript capture. That is intentional. The useful me
 
 ## Preferred Setup: Global Codex Instructions
 
-To avoid polluting every repo, M5 uses global Codex instructions instead of adding `AGENTS.md` to every project.
+To avoid polluting every repo, Laptop uses global Codex instructions instead of adding `AGENTS.md` to every project.
 
 Global instructions live here:
 
@@ -21,13 +21,13 @@ Global instructions live here:
 ~/.codex/AGENTS.md
 ```
 
-That file tells Codex agents on M5 to read and update:
+That file tells Codex agents on Laptop to read and update:
 
 ```text
 ~/Obsidian-Vault/AI Brain
 ```
 
-This is the default path for all projects on M5.
+This is the default path for all projects on Laptop.
 
 ## Optional Setup: Per-Repo Pointer
 
@@ -44,7 +44,7 @@ Use:
 
 ```sh
 cd ~/Obsidian-Vault
-node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "M5"
+node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "Laptop"
 ```
 
 This creates or updates `/path/to/repo/AGENTS.md` with a marked AI Brain section.
@@ -70,7 +70,7 @@ At the end of meaningful work, Codex should create a short session summary:
 
 ```sh
 cd ~/Obsidian-Vault
-node "AI Brain/scripts/brain.mjs" closeout "Project Name" "Short session title" "M5" \
+node "AI Brain/scripts/brain.mjs" closeout "Project Name" "Short session title" "Laptop" \
   --summary "What changed" \
   --changes "Files, repos, or areas touched" \
   --decisions "Important decisions" \
@@ -86,7 +86,7 @@ AI Brain/Projects/Project Name/Sessions/
 It also appends to:
 
 ```text
-AI Brain/Machines/M5/Session Log.md
+AI Brain/Machines/Laptop/Session Log.md
 ```
 
 Codex should still update these files manually when needed:
@@ -121,7 +121,7 @@ Do not save:
 - raw terminal logs
 - huge generated logs
 
-## Recommended Rollout On M5
+## Recommended Rollout On Laptop
 
 Default: do not add files to every repo.
 
@@ -130,7 +130,7 @@ Use the global instruction file at `~/.codex/AGENTS.md`.
 Only add a per-repo pointer for a repo that needs extra reliability or repo-specific instructions:
 
 ```sh
-node "AI Brain/scripts/brain.mjs" install-agent-pointer "My-Project" "~/code/my-project" "M5"
+node "AI Brain/scripts/brain.mjs" install-agent-pointer "My-Project" "~/code/my-project" "Laptop"
 ```
 
 Then commit the `AGENTS.md` change in that one project repo.

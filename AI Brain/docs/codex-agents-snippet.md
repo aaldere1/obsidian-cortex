@@ -2,12 +2,12 @@
 
 This is the **canonical Codex configuration block** for any machine participating in the Obsidian-Vault brain. Paste it into `~/.codex/AGENTS.md` on each Codex-enabled machine, then **replace the placeholders**:
 
-- `<MACHINE>` → this machine's name (e.g., `M5`, `Studio`, `MBP-Studio`)
+- `<MACHINE>` → this machine's name (e.g., `Laptop`, `Studio`, `MBP-Studio`)
 - `<VAULT>` → this machine's local vault path (e.g., `~/Obsidian-Vault`)
 
 Restart any open Codex session after editing.
 
-When `AGENT-BOOTSTRAP.md` Branch C runs for a Codex agent, this file is what gets copied. Keep it in sync with what's actually live on M5.
+When `AGENT-BOOTSTRAP.md` Branch C runs for a Codex agent, this file is what gets copied. Keep it in sync with what's actually live on Laptop.
 
 ---
 
@@ -123,11 +123,11 @@ It extracts the fenced block from this file, substitutes `<MACHINE>` and `<VAULT
 
 ## Why this file exists
 
-Without this canonical snippet, new-machine onboarding for Codex would require copying from M5's `~/.codex/AGENTS.md` — which is brittle (M5 might not be available, the file might have drifted, the user might not know where to find it). Keeping it in the vault means:
+Without this canonical snippet, new-machine onboarding for Codex would require copying from Laptop's `~/.codex/AGENTS.md` — which is brittle (Laptop might not be available, the file might have drifted, the user might not know where to find it). Keeping it in the vault means:
 
 - Every machine has access via `git pull`
 - Version control catches accidental edits
 - `brain.mjs codex-install` can reliably point Codex agents to a single canonical source
-- M5's `~/.codex/AGENTS.md` can also be regenerated from this if it ever gets corrupted
+- Laptop's `~/.codex/AGENTS.md` can also be regenerated from this if it ever gets corrupted
 
-When you change the Codex protocol on M5, update this file too. The two should stay in sync.
+When you change the Codex protocol on Laptop, update this file too. The two should stay in sync.

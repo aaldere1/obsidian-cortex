@@ -79,56 +79,67 @@ You re-explain your stack. Your preferences. What you were doing yesterday. What
 
 ---
 
-## ⚡ Quick start
+## ⚡ Quick start — *let the agent set itself up*
 
 > **Requirements:** [Obsidian](https://obsidian.md) · Git · Node 18+
 
+Don't run setup by hand. Clone the vault, open your AI agent **inside it**, and hand it the goal:
+
 ```bash
-# 1. Clone this template as your vault, open it in Obsidian
 git clone https://github.com/aaldere1/obsidian-cortex.git Obsidian-Vault
 cd Obsidian-Vault
-
-# 2. Register this machine
-node "AI Brain/scripts/brain.mjs" init-machine "Laptop"
-
-# 3. Start your first project
-node "AI Brain/scripts/brain.mjs" init-project "My First Project"
-
-# 4. Explore everything it can do
-node "AI Brain/scripts/brain.mjs" --help
+claude        # or: codex
 ```
 
-Then point your AI tool at the vault (guides in [`AI Brain/docs/`](AI%20Brain/docs/)) so it reads `Shared/` + this machine's `Current Context.md` on every session start. **That's it.**
+Then paste:
+
+> **Onboard this machine to the Obsidian Cortex brain.** Read `START-HERE.md` and do every step:
+> pick a machine name from this computer's hostname, register it, install the skills + sync hook,
+> then commit and push. Confirm each step and tell me the machine name you chose.
+
+The agent reads [`START-HERE.md`](START-HERE.md) and does the whole setup — clone-to-configured in one prompt. **That's the point of the whole project: you give the goal, the agent does the work.**
+
+<details>
+<summary>Prefer to run it yourself? Manual setup →</summary>
+
+```bash
+node "AI Brain/scripts/brain.mjs" init-machine "Laptop"        # register this machine
+node "AI Brain/scripts/brain.mjs" init-project "My Project"    # start a project
+node "AI Brain/scripts/brain.mjs" install-claude-skills        # wire up Claude Code
+node "AI Brain/scripts/brain.mjs" --help                       # everything else
+```
+Full step-by-step in [`START-HERE.md`](START-HERE.md).
+</details>
 
 ---
 
-## 🪄 You don't run commands — *the agent does*
+## 🪄 You don't run CLI — *the agent does*
 
-> **This is the whole point.** Typing `brain.mjs closeout ...` by hand is insane in the age of AI. Nobody will do it. So they don't have to.
+> **This is the whole point.** Typing `brain.mjs closeout ...` by hand is insane in the age of AI. Nobody will do it. So instead you type one short slash command (or paste a prompt), and the agent runs the real work.
 
-Obsidian Cortex ships with **agent skills** that teach your AI to run the protocol *itself*, triggered by plain English:
+Obsidian Cortex ships with **agent skills** wired as **slash commands** — the reliable way to drive the protocol. One word, and the agent does the bookkeeping:
 
-| You say… | The agent automatically… |
-|---|---|
-| *"let's start"* / opens a session | 🟢 pulls the vault, briefs you, marks the machine active (`brain-startup`) |
-| *"we're done"* / *"wrap up"* / *"push it"* | 🏁 writes a session summary, updates project state, goes idle (`brain-closeout`) |
-| *"that's it for today"* | 📅 rolls up the day's sessions (`brain-daily`) |
-| first run on a new machine | 🤖 bootstraps the whole setup (`brain-bootstrap`) |
-
-Drop the included `.claude/skills/` into Claude Code (or the `AGENTS.md` snippet into Codex) and it just *works*. The agent notices you're wrapping up and saves state — no command, no ceremony.
+| Command | When you run it | The agent automatically… |
+|---|---|---|
+| **`/brain-startup`** | start of a session | 🟢 pulls the vault, shows activity across machines, briefs you, marks this machine active |
+| **`/brain-closeout`** | done / "push it" | 🏁 writes a session summary, updates project state, marks the machine idle |
+| **`/brain-daily`** | end of day | 📅 rolls up the day's sessions into `Daily/` |
+| **`/brain-bootstrap`** | new machine | 🤖 sets the machine up from scratch |
 
 ```text
-You:   "ok we're done for tonight, push it"
+You:   /brain-closeout
 Agent: ✍️  Writing session summary to the brain…
        📦  Updated "My Project" → Current State + Next Steps
        😴  Marked Laptop idle
        🚀  Pushed. Tomorrow's session (any machine) picks up here.
 ```
 
-Prefer explicit control? The same actions are also wired as slash commands — `/brain-startup`, `/brain-closeout`, `/brain-daily` — and as raw CLI under the hood:
+Drop the included `.claude/skills/` into Claude Code (or the `AGENTS.md` block into Codex) and the commands light up.
+
+> ⚠️ **Honest note:** Claude Code *can* auto-fire skills from natural phrases ("wrap up", "catch me up"), but that discovery is **probabilistic and often won't trigger**. The slash commands always fire — use them. Natural language is a nice-to-have, not the path.
 
 <details>
-<summary>🔧 The underlying commands (the agent calls these for you)</summary>
+<summary>🔧 The underlying commands (the slash commands call these for you)</summary>
 
 ```bash
 node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Claude Code" --project "My Project" --focus "Refactoring auth"

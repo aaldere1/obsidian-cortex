@@ -8,21 +8,21 @@
 # Properties:
 # - Silent unless an update was actually applied
 # - Never blocks or fails the session (always exits 0)
-# - Skips quickly if vault is missing or this isn't the obsidian-personal repo
+# - Skips quickly if vault is missing or this isn't the obsidian-cortex repo
 # - Honors $BRAIN_VAULT env var to override the default vault path
 
 set +e
 
-VAULT="${BRAIN_VAULT:-$HOME/Obsidian-Personal}"
+VAULT="${BRAIN_VAULT:-$HOME/Obsidian-Vault}"
 
 # Skip if vault doesn't exist on this machine
 [ ! -d "$VAULT/.git" ] && exit 0
 
-# Skip if this isn't the obsidian-personal repo (defensive: avoid running in
+# Skip if this isn't the obsidian-cortex repo (defensive: avoid running in
 # a random git repo that happens to live at $BRAIN_VAULT)
 GIT_REMOTE=$(cd "$VAULT" 2>/dev/null && git config --get remote.origin.url 2>/dev/null)
 case "$GIT_REMOTE" in
-  *obsidian-personal*) ;;
+  *obsidian-cortex*) ;;
   *) exit 0 ;;
 esac
 
