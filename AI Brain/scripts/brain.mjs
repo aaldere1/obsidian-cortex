@@ -37,24 +37,24 @@ function help() {
 Obsidian AI Brain helper
 
 Memory & sessions:
-  node "AI Brain/scripts/brain.mjs" init-machine "M5"
+  node "AI Brain/scripts/brain.mjs" init-machine "Laptop"
   node "AI Brain/scripts/brain.mjs" init-project "Project Name"
   node "AI Brain/scripts/brain.mjs" new-session "Project Name" "Session title" ["Machine Name"]
-  node "AI Brain/scripts/brain.mjs" closeout "Project Name" "Session title" "M5" --summary "What happened" --next "What should happen next"
-  node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "M5"
+  node "AI Brain/scripts/brain.mjs" closeout "Project Name" "Session title" "Laptop" --summary "What happened" --next "What should happen next"
+  node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "Laptop"
 
 Session protocol (in-flight coordination):
-  node "AI Brain/scripts/brain.mjs" startup "M5" --agent "Claude Code" --project "Project Name" --focus "What I'm doing"
-  node "AI Brain/scripts/brain.mjs" activity "M5" --focus "Updated focus" [--heartbeat]
-  node "AI Brain/scripts/brain.mjs" idle "M5"
+  node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Claude Code" --project "Project Name" --focus "What I'm doing"
+  node "AI Brain/scripts/brain.mjs" activity "Laptop" --focus "Updated focus" [--heartbeat]
+  node "AI Brain/scripts/brain.mjs" idle "Laptop"
   node "AI Brain/scripts/brain.mjs" snapshot                            # who's doing what across all machines
 
 Wiki layer:
   node "AI Brain/scripts/brain.mjs" log-event ingest|query|lint|daily|note "Subject"
-  node "AI Brain/scripts/brain.mjs" daily "M5"                          # rollup today's sessions into AI Brain/Daily/
+  node "AI Brain/scripts/brain.mjs" daily "Laptop"                          # rollup today's sessions into AI Brain/Daily/
 
 Agent installers (one-shot setup of agent flavor on this machine):
-  node "AI Brain/scripts/brain.mjs" codex-install "M5" [--force]        # append/refresh canonical AI Brain block in ~/.codex/AGENTS.md (idempotent)
+  node "AI Brain/scripts/brain.mjs" codex-install "Laptop" [--force]        # append/refresh canonical AI Brain block in ~/.codex/AGENTS.md (idempotent)
   node "AI Brain/scripts/brain.mjs" install-claude-skills [--force]     # copy the 4 brain-* skills from vault → ~/.claude/skills/
   node "AI Brain/scripts/brain.mjs" install-claude-hook [--force]       # wire SessionStart auto-sync hook into ~/.claude/settings.json
 
@@ -467,7 +467,7 @@ async function scanRepos(rootArg) {
   }
 
   console.log("\nTo link one repo:");
-  console.log('node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "M5"');
+  console.log('node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "Laptop"');
 }
 
 function formatTimestamp(date = new Date()) {

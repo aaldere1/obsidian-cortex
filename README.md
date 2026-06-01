@@ -102,25 +102,41 @@ Then point your AI tool at the vault (guides in [`AI Brain/docs/`](AI%20Brain/do
 
 ---
 
-## 🪄 The session protocol — *the magic part*
+## 🪄 You don't run commands — *the agent does*
 
-Agents *announce* what they're doing, so you (and other agents on other machines) see live activity:
+> **This is the whole point.** Typing `brain.mjs closeout ...` by hand is insane in the age of AI. Nobody will do it. So they don't have to.
+
+Obsidian Cortex ships with **agent skills** that teach your AI to run the protocol *itself*, triggered by plain English:
+
+| You say… | The agent automatically… |
+|---|---|
+| *"let's start"* / opens a session | 🟢 pulls the vault, briefs you, marks the machine active (`brain-startup`) |
+| *"we're done"* / *"wrap up"* / *"push it"* | 🏁 writes a session summary, updates project state, goes idle (`brain-closeout`) |
+| *"that's it for today"* | 📅 rolls up the day's sessions (`brain-daily`) |
+| first run on a new machine | 🤖 bootstraps the whole setup (`brain-bootstrap`) |
+
+Drop the included `.claude/skills/` into Claude Code (or the `AGENTS.md` snippet into Codex) and it just *works*. The agent notices you're wrapping up and saves state — no command, no ceremony.
+
+```text
+You:   "ok we're done for tonight, push it"
+Agent: ✍️  Writing session summary to the brain…
+       📦  Updated "My Project" → Current State + Next Steps
+       😴  Marked Laptop idle
+       🚀  Pushed. Tomorrow's session (any machine) picks up here.
+```
+
+Prefer explicit control? The same actions are also wired as slash commands — `/brain-startup`, `/brain-closeout`, `/brain-daily` — and as raw CLI under the hood:
+
+<details>
+<summary>🔧 The underlying commands (the agent calls these for you)</summary>
 
 ```bash
-# 🟢 Agent starts work
-node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Claude Code" \
-  --project "My Project" --focus "Refactoring the auth layer"
-
-# 💓 Heartbeat while working
+node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Claude Code" --project "My Project" --focus "Refactoring auth"
 node "AI Brain/scripts/brain.mjs" activity "Laptop" --heartbeat
-
-# 👀 See who's doing what across ALL your machines
-node "AI Brain/scripts/brain.mjs" snapshot
-
-# 🏁 Wrap up — writes a session summary, resets machine to idle
-node "AI Brain/scripts/brain.mjs" closeout "My Project" "Auth refactor" "Laptop" \
-  --summary "Split auth into middleware" --next "Add refresh-token tests"
+node "AI Brain/scripts/brain.mjs" snapshot      # who's doing what across all machines
+node "AI Brain/scripts/brain.mjs" closeout "My Project" "Auth refactor" "Laptop" --summary "..." --next "..."
 ```
+</details>
 
 > Because the vault is Git-synced, your **desktop can literally see** that your **laptop** is mid-refactor on the auth layer. Cross-device continuity, zero servers. 🤯
 
@@ -138,10 +154,15 @@ AI Brain/
 │       └── Session Log.md       Short index of meaningful sessions
 ├── 📦 Projects/          Per-project memory (overview · state · decisions · next steps)
 ├── 📅 Daily/             Auto-rolled daily summaries
+├── 🤖 skills-claude-code/  Agent skills — teach the AI to run the protocol on its own
 ├── 🧩 templates/         The blueprints brain.mjs stamps out
 ├── 📖 docs/              Setup + workflow guides (Codex, Claude Code, cron)
 └── ⚙️  scripts/
     └── brain.mjs         The whole engine — pure Node stdlib, zero deps
+
+.claude/
+├── skills/              Auto-installed brain-* skills for Claude Code
+└── commands/            /brain-startup · /brain-closeout · /brain-daily slash commands
 ```
 
 ---
