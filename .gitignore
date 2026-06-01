@@ -1,0 +1,25 @@
+# Obsidian workspace state (per-machine, not shareable)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.trash/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs / temp
+*.log
+/tmp/
+.tmp/
+
+# Secrets — NEVER commit these. Belt-and-suspenders.
+.env
+.env.*
+*.key
+*.pem
+secrets.*
+credentials.*
+
+# Node
+node_modules/
