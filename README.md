@@ -40,27 +40,11 @@ You re-explain your stack. Your preferences. What you were doing yesterday. What
 
 **Obsidian Cortex** gives your agents a persistent, shared brain that lives in plain Markdown, syncs over Git, and follows you to every machine.
 
-```
-       ┌─────────────────────────────────────────────────┐
-       │              📓  OBSIDIAN VAULT                  │
-       │        (Markdown — the single source of truth)   │
-       └─────────────────────────────────────────────────┘
-                              │
-                       🔗 Git sync
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-   💻 Laptop             🖥️  Desktop            ☁️  Server
-   Claude Code            Codex                  Cursor
-        │                     │                     │
-        └─────────── all read the same brain ───────┘
-                              │
-                              ▼
-            "I know who you are, what you're
-             building, and where we left off."
-```
+<p align="center">
+  <img src="assets/architecture.svg" alt="How Obsidian Cortex works: one Obsidian vault, Git-synced across every machine, read by every AI agent" width="100%" />
+</p>
 
-Any agent. Any machine. Reads a few files on startup → instantly up to speed.
+<p align="center"><em>Any agent. Any machine. Reads a few files on startup → instantly up to speed.</em></p>
 
 ---
 
