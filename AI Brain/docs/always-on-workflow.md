@@ -130,7 +130,7 @@ Use the global instruction file at `~/.codex/AGENTS.md`.
 Only add a per-repo pointer for a repo that needs extra reliability or repo-specific instructions:
 
 ```sh
-node "AI Brain/scripts/brain.mjs" install-agent-pointer "My-Project" "~/code/my-project" "Laptop"
+node "AI Brain/scripts/brain.mjs" install-agent-pointer "my-project" "~/my-project" "Laptop"
 ```
 
 Then commit the `AGENTS.md` change in that one project repo.

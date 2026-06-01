@@ -86,7 +86,7 @@ You re-explain your stack. Your preferences. What you were doing yesterday. What
 Don't run setup by hand. Clone the vault, open your AI agent **inside it**, and hand it the goal:
 
 ```bash
-git clone https://github.com/aaldere1/obsidian-cortex.git Obsidian-Vault
+git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
 cd Obsidian-Vault
 claude        # or: codex
 ```

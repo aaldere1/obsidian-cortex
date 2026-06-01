@@ -1,6 +1,6 @@
 # Set Up The Brain On Another Computer
 
-Goal: bring a new machine to full parity with your first machine in under 10 minutes. After this, any Claude Code or Codex session on the new machine will read from and write to the same `obsidian-cortex` vault as every other machine.
+Goal: bring a new machine to full parity with Laptop in under 10 minutes. After this, any Claude Code or Codex session on the new machine will read from and write to the same `obsidian-cortex` vault as every other machine.
 
 This is the **one-shot onboarding**. Follow top to bottom. Estimated time: 5–10 minutes.
 
@@ -10,7 +10,7 @@ This is the **one-shot onboarding**. Follow top to bottom. Estimated time: 5–1
 
 The new machine needs:
 
-- `git` configured with access to `https://github.com/YOUR-USERNAME/YOUR-VAULT-REPO` (https + a token, or SSH key)
+- `git` configured with access to `https://github.com/YOUR-USERNAME/obsidian-cortex` (https + a token, or SSH key)
 - `node` (any LTS or current — verified with v22+, v25)
 - Optional but recommended: Obsidian app installed
 - Optional but recommended: Claude Code installed (`claude`) and/or Codex CLI installed
@@ -23,7 +23,7 @@ Pick a stable path (suggested: `~/Obsidian-Vault`). All examples below assume th
 
 ```sh
 cd ~
-git clone https://github.com/YOUR-USERNAME/YOUR-VAULT-REPO.git Obsidian-Vault
+git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
 cd Obsidian-Vault
 ```
 
@@ -83,10 +83,10 @@ You should see your new machine in the list with `ACTIVE` status.
 
 ### Claude Code
 
-Symlink or copy the three `brain-*` skills from your `~/.claude/skills/` directory. If you sync `~/.claude/` across machines (e.g. via dotfiles), skip this — they're already there. Otherwise copy them from an existing machine:
+Symlink or copy the three `brain-*` skills from your `~/.claude/skills/` directory. If you sync `~/.claude/` across machines (e.g. via dotfiles), skip this — they're already there. Otherwise copy them from Laptop:
 
 ```sh
-# from an existing machine, copy to clipboard / file transfer / git, then on the new machine:
+# from Laptop, copy to clipboard / file transfer / git, then on the new machine:
 mkdir -p ~/.claude/skills
 # place brain-startup, brain-closeout, brain-daily under ~/.claude/skills/
 ```
@@ -95,7 +95,7 @@ The three skills will then be auto-discovered by Claude Code on session start.
 
 ### Codex
 
-Add the AI Brain memory section to the global Codex AGENTS.md at `~/.codex/AGENTS.md`. The canonical version is in `~/Obsidian-Vault/AI Brain/docs/global-codex-instructions.md` — copy the relevant section into the new machine's `~/.codex/AGENTS.md` and replace any example machine-name references with `<MACHINE>` and any `~/Obsidian-Vault` references with the actual path on the new machine.
+Add the AI Brain memory section to the global Codex AGENTS.md at `~/.codex/AGENTS.md`. The canonical version is in `~/Obsidian-Vault/AI Brain/docs/global-codex-instructions.md` — copy the relevant section into the new machine's `~/.codex/AGENTS.md` and replace any `Laptop` references with `<MACHINE>` and any `~/Obsidian-Vault` references with the actual path on the new machine.
 
 ---
 
@@ -106,7 +106,7 @@ Add a cron entry so the daily rollup runs even if you forget:
 ```sh
 crontab -e
 # add this line — replace path and machine name:
-0 21 * * * cd ~/Obsidian-Vault && node "AI Brain/scripts/brain.mjs" daily "<MACHINE>" >> /tmp/brain-daily.log 2>&1
+0 21 * * * cd /Users/<you>/Obsidian-Vault && node "AI Brain/scripts/brain.mjs" daily "<MACHINE>" >> /tmp/brain-daily.log 2>&1
 ```
 
 This runs at 9pm local. The skills will also remind you at session-closeout if no daily exists for today.

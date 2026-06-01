@@ -24,7 +24,7 @@ hostname
 ls ~/Obsidian-Vault/AI\ Brain/Machines/
 ```
 
-Use the folder name that matches the hostname (case may differ — `Laptop` hostname → `LAPTOP` folder is fine). If you find yourself about to type the literal `"Laptop"` in a command, STOP — that's a real bug we hit where one machine clobbered another's Current Activity. Always substitute.
+Use the folder name that matches the hostname (case may differ — `Laptop` hostname → `LAPTOP` folder is fine). If you find yourself about to type the literal `"Laptop"` in a command, STOP — that's the bug from 2026-05-21 where LAPTOP clobbered Laptop's Current Activity. Always substitute.
 
 ### 1. Run the daily command
 

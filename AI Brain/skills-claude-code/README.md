@@ -42,11 +42,11 @@ After `install-claude-hook`, every Claude Code session start on this machine run
 3. If any differ, runs `install-claude-skills --force` automatically
 4. Prints `🧠 Brain skills updated…` only when an update was actually applied (silent otherwise)
 
-This means: edit a skill in the vault on your laptop, push, and the next Claude Code session on any other machine picks up the update with no manual command. The current session still has the old description in memory (skills load before SessionStart hooks fire), but the next one is up to date.
+This means: edit a skill in the vault on Laptop, push, and the next Claude Code session on any other machine picks up the update with no manual command. The current session still has the old description in memory (skills load before SessionStart hooks fire), but the next one is up to date.
 
 ## Keep in sync
 
-When you edit a skill (e.g., a `~/.claude/skills/brain-startup/SKILL.md` on your laptop), also update the canonical copy here in the vault. Otherwise other machines onboarding will install the outdated version.
+When you edit a skill (e.g., a `~/.claude/skills/brain-startup/SKILL.md` on Laptop), also update the canonical copy here in the vault. Otherwise other machines onboarding will install the outdated version.
 
 (A future improvement: a `brain.mjs sync-claude-skills` command that diffs the two locations and prompts which side wins. For now, copy by hand when you edit.)
 
