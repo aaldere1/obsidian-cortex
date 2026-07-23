@@ -292,7 +292,7 @@ For the deeper technical version of this checklist (with troubleshooting), see `
 AI Brain/Machines/<MACHINE>/Activities/<session_id>.md
 ```
 
-`brain-startup` returns that `session_id`. At closeout there are two distinct steps: the `closeout` command writes the *durable session summary* (it does not take `--session`), and a separate `idle --session <id>` step removes the *in-flight record*. The `brain-closeout` skill runs both for you; you only pass `--session` when more than one session is active on the machine. Two sessions on the same machine never overwrite each other's in-flight state.
+`brain-startup` returns that `session_id`. At closeout there are two distinct steps: the `closeout` command writes the *durable session summary* (it does not take `--session`), and a separate `idle --session <id>` step removes the *in-flight record*. The `brain-closeout` skill runs both for you; you only pass `--session` when more than one session is active on the machine. When several sessions run at once, each one closes out independently — its own agent-authored summary plus `idle --session <its id>` for its own record; the summary is written from what that agent did, not auto-derived or merged across sessions. Two sessions on the same machine never overwrite each other's in-flight state.
 
 **`Current Activity.md` is derived, not authored.** The single `Current Activity.md` per machine is *rebuilt* from the session files whenever they change:
 - exactly one session → it mirrors that session,
