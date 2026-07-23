@@ -46,7 +46,7 @@ At the start of meaningful work:
    - `<VAULT>/AI Brain/Machines/<MACHINE>/Local Setup.md`
    - `<VAULT>/AI Brain/Machines/<MACHINE>/Working Projects.md` (if it exists)
    - `<VAULT>/AI Brain/Machines/<MACHINE>/Current Activity.md` (in-flight signal — overwritten on each session start)
-5. Read the wiki catalog: `<VAULT>/index.md`. If the task overlaps any synthesis page or entity (under `Synthesis/`, `Tools/`, or `Tools/`), read those pages too.
+5. Read the wiki catalog: `<VAULT>/index.md`. If the task overlaps any synthesis page or entity (under `Synthesis/`, `Infrastructure/`, or `Tools/`), read those pages too.
 6. If the current repo has a matching project under `<VAULT>/AI Brain/Projects/`, read that project's `Overview.md`, `Current State.md`, `Next Steps.md`, and `Decisions.md`.
 7. If no project memory exists and the work is meaningful, create it in AI Brain rather than adding memory files to the repo being worked on.
 8. Write Current Activity so other machines see this session is live:

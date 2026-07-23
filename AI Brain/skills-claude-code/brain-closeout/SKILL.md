@@ -15,16 +15,16 @@ Writes a structured session summary to the Obsidian AI Brain, updates project st
 
 ## What to do
 
-### 0. Detect THIS machine's name (CRITICAL — DO NOT SKIP)
+### 0. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
 
 **Every example in this skill uses `<MACHINE>` as a placeholder.** You MUST substitute your actual machine name. Do NOT copy `"Laptop"` or any literal name from this doc.
 
 ```sh
-hostname
-ls ~/Obsidian-Vault/AI\ Brain/Machines/
+cd ~/Obsidian-Vault
+node "AI Brain/scripts/brain.mjs" whoami
 ```
 
-Use the folder name that matches the hostname (case may differ — `Laptop` hostname → `LAPTOP` folder is fine). If you find yourself about to type the literal `"Laptop"` in a command, STOP — that's the bug from 2026-05-21 where LAPTOP clobbered Laptop's Current Activity. Always substitute.
+Use the reported `canonical:` value. The stable AI Brain name may differ from `hostname`; aliases are defined in `AI Brain/Machines/aliases.json`. If you find yourself about to copy a literal machine name from an example, stop and use the resolved canonical value.
 
 ### 1. Draft the summary from the session itself
 
@@ -42,6 +42,7 @@ If you're unsure, run `git status` and `git log --oneline -10` in the project re
 
 - **Project name** = the matching `AI Brain/Projects/<name>/` folder. If unsure: `node "AI Brain/scripts/brain.mjs" status` lists them.
 - **Machine name** = the `<MACHINE>` you detected in Step 0 above. Do NOT default to "Laptop".
+- **Session ID** = the `session_id` returned by this task's startup command. If unavailable, use `snapshot` and match the task by agent/project/focus; omit `--session` only if exactly one session is active on this machine.
 - **Session title** = short imperative phrase (e.g., "Bootstrap wiki layer + session protocol").
 
 ### 3. Run closeout
@@ -56,7 +57,7 @@ node "AI Brain/scripts/brain.mjs" closeout "<Project Name>" "<Session title>" "<
   --questions "<open questions, or 'None recorded'>"
 ```
 
-This writes `AI Brain/Projects/<Project>/Sessions/YYYY-MM-DD-HHMM-<slug>.md` AND appends to `AI Brain/Machines/Laptop/Session Log.md`.
+This writes `AI Brain/Projects/<Project>/Sessions/YYYY-MM-DD-HHMM-<slug>.md` AND appends to `AI Brain/Machines/<MACHINE>/Session Log.md`.
 
 ### 4. Update durable project files if state changed
 
@@ -83,8 +84,10 @@ node "AI Brain/scripts/brain.mjs" log-event ingest|query|lint|note "<subject>"
 ### 7. Mark this machine idle
 
 ```sh
-node "AI Brain/scripts/brain.mjs" idle "<MACHINE>"
+node "AI Brain/scripts/brain.mjs" idle "<MACHINE>" --session "<SESSION_ID>"
 ```
+
+Never use `idle --all` for a normal closeout; it would clear other concurrent tasks.
 
 ### 8. Daily-summary check
 

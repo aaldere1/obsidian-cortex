@@ -1,11 +1,11 @@
 ---
 name: brain-startup
-description: Brief the agent on the current state of the Obsidian AI Brain at the start of meaningful work. Reads cross-machine snapshot, shared memory, this machine's context, and relevant project memory; writes Current Activity so other machines know what's in-flight. Use when starting work on a project, when the user says "start a session", "starting a session", "begin session", "kick off", "let's get started", "what was I doing", "where did I leave off", "catch me up", "what's the current state", "what's the state of X", or at the beginning of any non-trivial session where you'd benefit from knowing prior decisions and context.
+description: Brief the agent on the current state of the Obsidian AI Brain at the start of meaningful work. Reads cross-machine snapshot, shared memory, this machine's context, and relevant project memory; creates a per-session activity record so concurrent tasks remain visible. Use when starting work on a project, when the user says "start a session", "starting a session", "begin session", "kick off", "let's get started", "what was I doing", "where did I leave off", "catch me up", "what's the current state", "what's the state of X", or at the beginning of any non-trivial session where you'd benefit from knowing prior decisions and context.
 ---
 
 # brain-startup
 
-Reads the Obsidian AI Brain at the start of a session and writes Current Activity so other machines see what's in-flight.
+Reads the Obsidian AI Brain at the start of a session and creates an independent activity record so other machines see every in-flight task.
 
 ## When to invoke
 
@@ -16,25 +16,20 @@ Reads the Obsidian AI Brain at the start of a session and writes Current Activit
 
 ## What to do
 
-### 0. Detect THIS machine's name (CRITICAL — DO NOT SKIP)
+### 0. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
 
 **Every example in this skill uses `<MACHINE>` as a placeholder.** You MUST substitute your actual machine name. Do NOT copy `"Laptop"` or any literal name from this doc — that's just the example machine.
 
-To detect this machine's name:
+Resolve the network hostname or alias to the canonical AI Brain folder:
 
 ```sh
-hostname
+cd ~/Obsidian-Vault
+node "AI Brain/scripts/brain.mjs" whoami
 ```
 
-Then verify a matching folder exists in the vault:
+Use the reported `canonical:` value. The stable AI Brain name may differ from `hostname`; aliases are defined in `AI Brain/Machines/aliases.json`. If `registered: no`, invoke the `brain-bootstrap` skill instead.
 
-```sh
-ls ~/Obsidian-Vault/AI\ Brain/Machines/
-```
-
-You should see a folder that matches the hostname (case may differ — `Laptop` hostname → `LAPTOP` folder is fine; use the folder name as canonical). If no matching folder exists, this machine has not been bootstrapped yet — invoke the `brain-bootstrap` skill instead.
-
-**Use the matched folder name as `<MACHINE>` in every command below.** If you find yourself about to type the literal string `"Laptop"` in a command, STOP — that's the bug from 2026-05-21 where LAPTOP overwrote Laptop's Current Activity. Always substitute.
+**Use the matched folder name as `<MACHINE>` in every command below.** If you find yourself about to type the literal string `"Laptop"` in a command, STOP — that's the classic multi-machine bug: one machine overwriting another machine's Current Activity. Always substitute.
 
 ### 1. Pull latest vault state
 
@@ -94,7 +89,7 @@ Use the output to populate the `## Machine`, `## Vault Location`, and `## Tools 
 
 If either file already has real content (over ~700 bytes, or any bullet has a value after `:`), **leave it alone** — don't overwrite user-curated text.
 
-Briefly mention the fill-in to the user in your closing brief (one sentence, not a section): *"Filled in Laptop's Local Setup template since it was empty."*
+Briefly mention the fill-in to the user in your closing brief (one sentence, not a section): *"Filled in this machine's Local Setup template since it was empty."*
 
 ### 4. If a project is implied, read its memory
 
@@ -109,9 +104,9 @@ If no project memory exists for an obviously meaningful project, suggest creatin
 
 ### 5. Check the wiki index for related synthesis pages
 
-Read `index.md` (vault root). If the user's task overlaps with any entry under `Synthesis/`, `Tools/`, or `Tools/`, read those pages too.
+Read `index.md` (vault root). If the user's task overlaps with any entry under `Synthesis/`, `Infrastructure/`, or `Tools/`, read those pages too.
 
-### 6. Write Current Activity for this machine
+### 6. Start an activity session on this machine
 
 ```sh
 node "AI Brain/scripts/brain.mjs" startup "<MACHINE>" \
@@ -120,6 +115,8 @@ node "AI Brain/scripts/brain.mjs" startup "<MACHINE>" \
   --focus "<one-line description of what you're about to do>" \
   --cwd "$(pwd)"
 ```
+
+Capture the returned `session_id` and retain it as `<SESSION_ID>` for this task. Heartbeat and closeout commands must target that ID when concurrent sessions exist.
 
 Choose `<Project Name>` to match an `AI Brain/Projects/<name>/` folder if possible. If the work doesn't fit a known project, use a short topical label.
 
@@ -134,12 +131,12 @@ In 3–6 lines, tell the user:
 
 Do not dump the raw memory at the user. Summarize.
 
-### 8. (Optional) Push the Current Activity
+### 8. (Optional) Push the activity record
 
 If the work session is going to be substantial, push so other machines see it:
 
 ```sh
-cd ~/Obsidian-Vault && git add "AI Brain/Machines/Laptop/Current Activity.md" && git commit -m "Laptop startup: <focus>" && git push
+cd ~/Obsidian-Vault && git add "AI Brain/Machines/<MACHINE>/Activities/<SESSION_ID>.md" "AI Brain/Machines/<MACHINE>/Current Activity.md" && git commit -m "<MACHINE> startup: <focus>" && git push
 ```
 
 For quick sessions, skip the push — the closeout will carry the activity with the session file.
@@ -148,4 +145,4 @@ For quick sessions, skip the push — the closeout will carry the activity with 
 
 - Never store secrets, credentials, or full chat transcripts
 - Read **only what's relevant** — do not bulk-load session history unless the user asks
-- If you're already mid-session and the user invokes this, do the snapshot + brief but skip the Current Activity write (it's already set)
+- If you're already mid-session and the user invokes this, do the snapshot + brief but do not create a second activity file for the same task

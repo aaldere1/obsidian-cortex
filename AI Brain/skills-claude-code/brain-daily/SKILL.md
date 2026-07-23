@@ -15,16 +15,16 @@ End-of-day rollup. Reads today's session files, machine session logs, and vault 
 
 ## What to do
 
-### 0. Detect THIS machine's name (CRITICAL — DO NOT SKIP)
+### 0. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
 
 **Every example in this skill uses `<MACHINE>` as a placeholder.** You MUST substitute your actual machine name. Do NOT copy `"Laptop"` or any literal name from this doc.
 
 ```sh
-hostname
-ls ~/Obsidian-Vault/AI\ Brain/Machines/
+cd ~/Obsidian-Vault
+node "AI Brain/scripts/brain.mjs" whoami
 ```
 
-Use the folder name that matches the hostname (case may differ — `Laptop` hostname → `LAPTOP` folder is fine). If you find yourself about to type the literal `"Laptop"` in a command, STOP — that's the bug from 2026-05-21 where LAPTOP clobbered Laptop's Current Activity. Always substitute.
+Use the reported `canonical:` value. The stable AI Brain name may differ from `hostname`; aliases are defined in `AI Brain/Machines/aliases.json`. If you find yourself about to copy a literal machine name from an example, stop and use the resolved canonical value.
 
 ### 1. Run the daily command
 
