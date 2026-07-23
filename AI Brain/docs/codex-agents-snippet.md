@@ -23,14 +23,13 @@ Memory vault:
 <VAULT>/AI Brain
 ```
 
-**Before any AI Brain command: detect THIS machine's name (CRITICAL).** Every example in this section uses `<MACHINE>` because this file was substituted at install time. If you find yourself about to run a command with a literal machine name that does NOT match this machine, STOP — verify by running:
+**Before any AI Brain command: resolve THIS machine's name (CRITICAL).** Every example in this section uses `<MACHINE>` because this file was substituted at install time. If you find yourself about to run a command with a literal machine name that does NOT match this machine, STOP — resolve it authoritatively:
 
 ```sh
-hostname
-ls <VAULT>/AI\ Brain/Machines/
+node "<VAULT>/AI Brain/scripts/brain.mjs" whoami
 ```
 
-Use the folder name that matches the hostname (case may differ — e.g., `Laptop` hostname → `LAPTOP` folder is fine). If the machine name in this AGENTS.md section differs from what `hostname` reports, this file was installed with the wrong machine name. Stop and re-run `node "<VAULT>/AI Brain/scripts/brain.mjs" codex-install "<actual-machine-name>" --force` before doing any AI Brain writes. **Reason: on 2026-05-21 a Claude Code agent on a second machine wrote Current Activity for the wrong machine because an example used a literal machine name. Same risk applies here.**
+Use the reported `canonical:` value — it maps the hostname and any `AI Brain/Machines/aliases.json` entries to the real machine folder. If `registered: no`, this machine isn't set up yet; run bootstrap first. If the machine name in this AGENTS.md section differs from `whoami`'s canonical value, this file was installed with the wrong name — re-run `node "<VAULT>/AI Brain/scripts/brain.mjs" codex-install "<canonical-name>" --force` before doing any AI Brain writes. **Reason: on 2026-05-21 an agent on a second machine wrote Current Activity for the wrong machine because an example used a literal machine name. `whoami` exists to prevent exactly that.**
 
 At the start of meaningful work:
 

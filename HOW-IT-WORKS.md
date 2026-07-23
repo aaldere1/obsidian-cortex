@@ -14,7 +14,7 @@ A single Obsidian vault that does three jobs at once:
 2. **Holds a wiki that compounds** — synthesis pages the AI writes for you, organized by topic, with cross-links. Grows every time you ingest a source or ask a substantive question.
 3. **Remembers what your AI agents are doing** — per-machine context, per-project state, session logs, daily rollups. So any agent on any machine picks up where the last one left off.
 
-GitHub syncs everything between computers. Obsidian Git polls every few minutes and pulls/pushes automatically. Three Claude Code skills (`brain-startup`, `brain-closeout`, `brain-daily`) plus a small Node CLI (`brain.mjs`) do all the bookkeeping.
+GitHub syncs everything between computers. Obsidian Git polls every few minutes and pulls/pushes automatically. Four Claude Code skills (`brain-startup`, `brain-closeout`, `brain-daily`, `brain-bootstrap`) plus a small Node CLI (`brain.mjs`) do all the bookkeeping — including tracking multiple concurrent sessions on the same machine without their in-flight records clobbering each other.
 
 You write almost none of it. You curate, point at things, ask questions. The AI does the rest.
 
@@ -79,7 +79,7 @@ This auto-fires the `brain-startup` skill, which will:
 1. `git pull` the vault
 2. Run a cross-machine snapshot (who else is active?)
 3. Read shared memory + this machine's context + relevant project memory + relevant wiki pages
-4. Write `Current Activity.md` so other machines know what you're doing
+4. Register a per-session activity record (so a second session on this machine doesn't overwrite the first) and refresh `Current Activity.md` so other machines know what you're doing
 5. Brief you in 3–6 lines on what's open and what's recommended next
 
 In Codex, the protocol is in `~/.codex/AGENTS.md` and runs automatically when relevant. If it doesn't seem to be doing the right thing, nudge: *"follow the AI Brain protocol"* or run the commands directly:
@@ -90,7 +90,7 @@ node "AI Brain/scripts/brain.mjs" snapshot
 node "AI Brain/scripts/brain.mjs" startup "<MACHINE>" --agent "Codex" --project "<Project>" --focus "<what you're doing>" --cwd "$(pwd)"
 ```
 
-(Replace `<MACHINE>` with this machine's actual name — `hostname` will tell you.)
+(Replace `<MACHINE>` with this machine's canonical name — run `node "AI Brain/scripts/brain.mjs" whoami` to resolve it from the hostname and any aliases in `AI Brain/Machines/aliases.json`, and to confirm the machine is registered.)
 
 Natural-language fallback (if you forget the slash command): *"start a session"*, *"catch me up"*, *"what was I working on"*, *"where did I leave off"*. These usually work; the slash command always works.
 
@@ -132,7 +132,7 @@ node "AI Brain/scripts/brain.mjs" closeout "<Project Name>" "<Short session titl
   --changes "Files / repos / areas touched" \
   --decisions "Durable decisions, or 'None recorded'" \
   --next "Specific next action"
-node "AI Brain/scripts/brain.mjs" idle "<MACHINE>"
+node "AI Brain/scripts/brain.mjs" idle "<MACHINE>" --session "<session_id>"   # the id startup printed; omit --session if only one session is active
 git add "AI Brain" && git commit -m "<MACHINE> closeout: <session title>" && git push
 ```
 
@@ -284,23 +284,40 @@ For the deeper technical version of this checklist (with troubleshooting), see `
 
 ## How the cross-machine coordination actually works
 
-Each machine writes its in-flight state to `AI Brain/Machines/<MACHINE>/Current Activity.md` — a small overwritten file with YAML frontmatter showing status, agent, project, focus, started, and last_heartbeat.
+**Machine identity.** Every command first resolves *which machine it's on* with `brain.mjs whoami`: it maps the OS hostname (and any entries in `AI Brain/Machines/aliases.json`) to the canonical `AI Brain/Machines/<MACHINE>/` folder. This is why a laptop that reports three different hostnames over its life still writes to one stable folder — and why one machine can never accidentally write another machine's records (the bug that motivated the whole scheme).
 
-When a session starts, `brain-startup` runs `git pull` and then `snapshot`, which reads every machine's Current Activity and reports:
+**Per-session activity records.** A machine can have several agents working at once (two Claude Code windows, a Codex run, a cron job). So each session gets its own `session_id` (`agent-date-time-hex`) and its own file under:
+
+```
+AI Brain/Machines/<MACHINE>/Activities/<session_id>.md
+```
+
+`brain-startup` returns that `session_id`. At closeout there are two distinct steps: the `closeout` command writes the *durable session summary* (it does not take `--session`), and a separate `idle --session <id>` step removes the *in-flight record*. The `brain-closeout` skill runs both for you; you only pass `--session` when more than one session is active on the machine. When several sessions run at once, each one closes out independently — its own agent-authored summary plus `idle --session <its id>` for its own record; the summary is written from what that agent did, not auto-derived or merged across sessions. Two sessions on the same machine never overwrite each other's in-flight state.
+
+**`Current Activity.md` is derived, not authored.** The single `Current Activity.md` per machine is *rebuilt* from the session files whenever they change:
+- exactly one session → it mirrors that session,
+- two or more → an aggregate (`project: Multiple (N sessions)` — run `snapshot` for the breakdown),
+- none → an `idle` record.
+
+**Snapshot.** When a session starts, `brain-startup` runs `git pull` then `snapshot`, which reads every machine's records and reports each machine, its `ACTIVE`/`idle` status, a `sessions=N` count, and a line per live session:
 
 ```
 In-flight activity across all machines:
-  ACTIVE   Laptop    agent=Claude Code   project=my-project
-                 focus: Implementing Vimeo playback selection
-                 started: 2026-05-21 09:15   heartbeat: 2026-05-21 09:43
-  idle     Studio agent=—            project=—
-                 focus: (idle)
-                 started: —          heartbeat: 2026-05-21 08:01
+
+  ACTIVE  Laptop  sessions=1
+    ACTIVE  claude-code-20260521-091500-a1b2c3d4  agent=Claude Code  project=my-project
+             focus: Implementing playback selection
+             started: 2026-05-21 09:15   heartbeat: 2026-05-21 09:43
+  idle    Studio  agent=Codex  project=notes
+           focus: (idle)
+           started: 2026-05-21 08:01   heartbeat: 2026-05-21 08:20
 ```
 
-If you start a session on `Studio` and see `Laptop` is `ACTIVE` on the same project, the skill tells you and asks how to proceed. No silent stomping on each other's work.
+If you start on `Studio` and see `Laptop` is `ACTIVE` on the same project, the skill flags it and asks how to proceed. No silent stomping.
 
-The Obsidian Git plugin auto-pulls every few minutes, so Current Activity changes propagate quickly. But `brain-startup`'s explicit `git pull` makes the snapshot accurate to the second.
+**Ghost cleanup.** A terminal killed without a clean closeout leaves a stale session file (the `SessionEnd` hook never fires). `brain.mjs reap "<MACHINE>"` removes any session with no heartbeat inside the window (default 48h) and rebuilds `Current Activity.md`, so a crash doesn't leave a machine looking permanently `ACTIVE`.
+
+The Obsidian Git plugin auto-pulls every few minutes, so these changes propagate quickly. `brain-startup`'s explicit `git pull` makes the snapshot accurate to the second.
 
 ---
 
@@ -329,7 +346,7 @@ If unsure, write less and link to a repo file or doc.
 You haven't run `init-machine` for this machine yet, or `startup` has never been called. See Step 3 and 4 above.
 
 **Snapshot shows a stale `ACTIVE` machine (heartbeat hours old).**
-That session probably crashed or someone forgot to closeout. Proceed but tell the user. To clear it manually: `node "AI Brain/scripts/brain.mjs" idle "<that-machine>"`.
+That session probably crashed or someone forgot to closeout. Proceed but tell the user. To clear the ghost sessions on a machine: `node "AI Brain/scripts/brain.mjs" reap "<that-machine>"` (removes sessions with no heartbeat in 48h and rebuilds Current Activity). To clear one specific session: `node "AI Brain/scripts/brain.mjs" idle "<that-machine>" --session "<session_id>"`.
 
 **Git pull fails with conflicts.**
 Two machines edited the same file. Most likely `index.md`, a `Current Activity.md`, or both. Open the file, resolve by hand (preserve both intents), `git add`, `git commit`. Never blindly accept one side.
@@ -376,15 +393,17 @@ say "bootstrap this machine" → brain-bootstrap runs (new machine only)
 #   - or run the brain.mjs commands directly:
 
 cd ~/Obsidian-Vault
-node "AI Brain/scripts/brain.mjs" snapshot        # who's doing what
-node "AI Brain/scripts/brain.mjs" status          # list machines + projects
-node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Codex" --project "X" --focus "Y" --cwd "$(pwd)"
-node "AI Brain/scripts/brain.mjs" activity "Laptop" --focus "Updated focus"
+node "AI Brain/scripts/brain.mjs" whoami           # resolve THIS machine's canonical name
+node "AI Brain/scripts/brain.mjs" snapshot         # who's doing what (per-session)
+node "AI Brain/scripts/brain.mjs" status           # list machines + projects
+node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Codex" --project "X" --focus "Y" --cwd "$(pwd)"   # prints a session_id
+node "AI Brain/scripts/brain.mjs" activity "Laptop" --session "<id>" --focus "Updated focus"
 node "AI Brain/scripts/brain.mjs" closeout "Project" "Title" "Laptop" --summary "..." --next "..."
-node "AI Brain/scripts/brain.mjs" idle "Laptop"
+node "AI Brain/scripts/brain.mjs" idle "Laptop" --session "<id>"   # omit --session if only one session is active
+node "AI Brain/scripts/brain.mjs" reap "Laptop"    # clear ghost sessions (no heartbeat in 48h)
 node "AI Brain/scripts/brain.mjs" daily "Laptop"
 node "AI Brain/scripts/brain.mjs" log-event ingest|note "Subject"
-node "AI Brain/scripts/brain.mjs" help            # all commands
+node "AI Brain/scripts/brain.mjs" help             # all commands
 
 # New computer: see "Setting up a new computer" above (~5-10 min)
 ```
@@ -401,4 +420,4 @@ node "AI Brain/scripts/brain.mjs" help            # all commands
 
 ---
 
-*Last updated: 2026-05-21*
+*Last updated: 2026-07-23*
