@@ -116,6 +116,18 @@ async function readTextIfExists(filePath) {
   }
 }
 
+async function safeUnlink(filePath) {
+  // A session file can vanish between listing and deletion (concurrent idle/reap
+  // on the same machine, or manual cleanup). Treat "already gone" as success.
+  try {
+    await unlink(filePath);
+    return true;
+  } catch (error) {
+    if (error && error.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
 async function readMachineAliases() {
   const content = await readTextIfExists(machineAliasesPath);
   if (!content.trim()) return {};
@@ -731,17 +743,24 @@ async function rebuildCurrentActivity(machineName, fallbackMeta = {}) {
     return;
   }
 
-  const existing = parseFrontmatter(await readTextIfExists(activityPath));
+  // No sessions remain → this machine is idle. Base the idle record only on a
+  // deliberately-passed just-closed session (fallbackMeta); do NOT inherit from
+  // the previous Current Activity, which may hold a stale or "multiple" aggregate
+  // session_id/project.
+  const lastSessionId =
+    fallbackMeta.session_id && fallbackMeta.session_id !== "multiple"
+      ? fallbackMeta.session_id
+      : "—";
   const content = buildActivityFrontmatter({
     status: "idle",
-    agent: fallbackMeta.agent || existing.agent || "—",
-    sessionId: fallbackMeta.session_id || existing.session_id || "—",
-    started: fallbackMeta.started || existing.started || stamp,
-    project: fallbackMeta.project || existing.project || "—",
+    agent: fallbackMeta.agent || "—",
+    sessionId: lastSessionId,
+    started: fallbackMeta.started || stamp,
+    project: fallbackMeta.project || "—",
     focus: "(idle)",
     lastHeartbeat: stamp,
     machine: machineName,
-    cwd: fallbackMeta.cwd || existing.cwd || "—",
+    cwd: fallbackMeta.cwd || "—",
   });
   await writeFile(activityPath, content, "utf8");
 }
@@ -844,7 +863,7 @@ async function idle(machineArg, optionArgs) {
   const sessions = await readSessionActivities(machineName);
 
   if (options.all === "true") {
-    for (const session of sessions) await unlink(session.filePath);
+    for (const session of sessions) await safeUnlink(session.filePath);
     await rebuildCurrentActivity(machineName, sessions.at(-1)?.meta || {});
     console.log(`idle: ${machineName} (${sessions.length} session${sessions.length === 1 ? "" : "s"} cleared)`);
     return;
@@ -857,7 +876,7 @@ async function idle(machineArg, optionArgs) {
     return;
   }
 
-  await unlink(selected.filePath);
+  await safeUnlink(selected.filePath);
   await rebuildCurrentActivity(machineName, selected.meta);
   console.log(`idle: ${path.relative(vaultRoot, selected.filePath)}`);
   console.log(`session_id: ${selected.meta.session_id}`);
@@ -881,7 +900,7 @@ async function reap(machineArg, optionArgs) {
     // terminal is killed (SessionEnd hooks never fire), so anything this stale is dead.
     const heartbeat = session.meta.last_heartbeat || session.meta.started || "";
     if (heartbeat && heartbeat < cutoffStamp) {
-      await unlink(session.filePath);
+      await safeUnlink(session.filePath);
       removed += 1;
       console.log(`reaped: ${path.relative(vaultRoot, session.filePath)} (heartbeat ${heartbeat})`);
     }
