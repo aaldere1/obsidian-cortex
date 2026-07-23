@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { mkdir, readFile, writeFile, access, readdir, stat } from "node:fs/promises";
+import { mkdir, readFile, writeFile, access, readdir, stat, cp, unlink } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
@@ -31,6 +32,8 @@ const vaultLogPath = path.join(vaultRoot, "log.md");
 const vaultIndexPath = path.join(vaultRoot, "index.md");
 const dailyDir = path.join(brainRoot, "Daily");
 const synthesisDir = path.join(vaultRoot, "Synthesis");
+const machinesDir = path.join(brainRoot, "Machines");
+const machineAliasesPath = path.join(machinesDir, "aliases.json");
 
 function help() {
   console.log(`
@@ -44,9 +47,11 @@ Memory & sessions:
   node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "Laptop"
 
 Session protocol (in-flight coordination):
+  node "AI Brain/scripts/brain.mjs" whoami ["Machine or hostname"]       # resolve to the canonical machine folder
   node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Claude Code" --project "Project Name" --focus "What I'm doing"
-  node "AI Brain/scripts/brain.mjs" activity "Laptop" --focus "Updated focus" [--heartbeat]
-  node "AI Brain/scripts/brain.mjs" idle "Laptop"
+  node "AI Brain/scripts/brain.mjs" activity "Laptop" --session "<session_id>" --focus "Updated focus"
+  node "AI Brain/scripts/brain.mjs" idle "Laptop" --session "<session_id>"  # --session optional when only one is active
+  node "AI Brain/scripts/brain.mjs" reap "Laptop" [--hours 48]              # remove ghost sessions (no heartbeat in N hours; terminal kills skip SessionEnd)
   node "AI Brain/scripts/brain.mjs" snapshot                            # who's doing what across all machines
 
 Wiki layer:
@@ -55,7 +60,7 @@ Wiki layer:
 
 Agent installers (one-shot setup of agent flavor on this machine):
   node "AI Brain/scripts/brain.mjs" codex-install "Laptop" [--force]        # append/refresh canonical AI Brain block in ~/.codex/AGENTS.md (idempotent)
-  node "AI Brain/scripts/brain.mjs" install-claude-skills [--force]     # copy the 4 brain-* skills from vault → ~/.claude/skills/
+  node "AI Brain/scripts/brain.mjs" install-claude-skills [--force]     # copy ALL canonical skills (any dir with SKILL.md, incl. scripts/) from vault → ~/.claude/skills/
   node "AI Brain/scripts/brain.mjs" install-claude-hook [--force]       # wire SessionStart auto-sync hook into ~/.claude/settings.json
 
 Inventory & misc:
@@ -111,6 +116,98 @@ async function readTextIfExists(filePath) {
   }
 }
 
+async function readMachineAliases() {
+  const content = await readTextIfExists(machineAliasesPath);
+  if (!content.trim()) return {};
+
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch (error) {
+    throw new Error(`Invalid JSON in ${machineAliasesPath}: ${error.message}`);
+  }
+
+  if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+    throw new Error(`${machineAliasesPath} must contain a JSON object of alias-to-machine mappings.`);
+  }
+
+  const aliases = {};
+  for (const [alias, target] of Object.entries(parsed)) {
+    if (!alias.trim() || typeof target !== "string" || !target.trim()) {
+      throw new Error(`${machineAliasesPath} contains an invalid alias mapping for ${JSON.stringify(alias)}.`);
+    }
+    aliases[alias.trim()] = target.trim();
+  }
+
+  return aliases;
+}
+
+function resolveAliasChain(name, aliases) {
+  let current = name;
+  const seen = new Set();
+
+  while (true) {
+    const key = Object.keys(aliases).find((alias) => alias.toLowerCase() === current.toLowerCase());
+    if (!key) return current;
+
+    const normalizedKey = key.toLowerCase();
+    if (seen.has(normalizedKey)) {
+      throw new Error(`Machine alias cycle detected at ${key} in ${machineAliasesPath}.`);
+    }
+    seen.add(normalizedKey);
+    current = aliases[key];
+  }
+}
+
+async function machineDirectoryNames() {
+  return (await readdir(machinesDir, { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
+    .map((entry) => entry.name)
+    .sort();
+}
+
+async function resolveMachineName(value = os.hostname()) {
+  const requested = requireName(value || os.hostname(), "machine name");
+  const aliases = await readMachineAliases();
+  const resolved = resolveAliasChain(requested, aliases);
+  const folders = await machineDirectoryNames();
+  return folders.find((folder) => folder.toLowerCase() === resolved.toLowerCase()) || resolved;
+}
+
+async function machineInventory() {
+  const aliases = await readMachineAliases();
+  const folders = await machineDirectoryNames();
+  const aliasKeys = new Set(Object.keys(aliases).map((alias) => alias.toLowerCase()));
+  const machines = folders.filter((folder) => !aliasKeys.has(folder.toLowerCase()));
+  const aliasesByCanonical = new Map();
+
+  for (const alias of Object.keys(aliases)) {
+    const resolved = resolveAliasChain(alias, aliases);
+    const canonical = folders.find((folder) => folder.toLowerCase() === resolved.toLowerCase()) || resolved;
+    const existing = aliasesByCanonical.get(canonical) || [];
+    existing.push(alias);
+    aliasesByCanonical.set(canonical, existing.sort());
+  }
+
+  return { aliases, aliasesByCanonical, machines };
+}
+
+async function whoami(machineArg) {
+  const hostname = os.hostname();
+  const requested = (machineArg && machineArg.trim()) || hostname;
+  const canonical = await resolveMachineName(requested);
+  const { aliasesByCanonical } = await machineInventory();
+  const folderPath = path.join(machinesDir, canonical);
+  const aliases = aliasesByCanonical.get(canonical) || [];
+
+  console.log(`hostname:   ${hostname}`);
+  console.log(`requested:  ${requested}`);
+  console.log(`canonical:  ${canonical}`);
+  console.log(`registered: ${(await exists(folderPath)) ? "yes" : "no"}`);
+  console.log(`folder:     ${path.relative(vaultRoot, folderPath)}`);
+  if (aliases.length) console.log(`aliases:    ${aliases.join(", ")}`);
+}
+
 function parseOptions(values) {
   const options = {};
 
@@ -162,7 +259,7 @@ async function copyTemplate(templateRelativePath, destinationPath, replacements)
 }
 
 async function initMachine(name) {
-  const machineName = requireName(name, "machine name");
+  const machineName = await resolveMachineName(name);
   const destinationDir = path.join(brainRoot, "Machines", machineName);
   const { date } = timestampParts();
 
@@ -206,7 +303,7 @@ async function ensureProject(name) {
 async function newSession(projectArg, titleArg, machineArg) {
   const projectName = requireName(projectArg, "project name");
   const title = requireName(titleArg || "Session summary", "session title");
-  const machineName = (machineArg && machineArg.trim()) || os.hostname();
+  const machineName = await resolveMachineName(machineArg || os.hostname());
   const { date, time } = timestampParts();
   const sessionsDir = path.join(brainRoot, "Projects", projectName, "Sessions");
 
@@ -226,7 +323,7 @@ async function newSession(projectArg, titleArg, machineArg) {
 async function closeout(projectArg, titleArg, machineArg, optionArgs) {
   const projectName = await ensureProject(projectArg);
   const title = requireName(titleArg || "Session closeout", "session title");
-  const machineName = requireName(machineArg || os.hostname(), "machine name");
+  const machineName = await resolveMachineName(machineArg || os.hostname());
   const options = parseOptions(optionArgs);
   const { date, time } = timestampParts();
   const projectDir = path.join(brainRoot, "Projects", projectName);
@@ -354,7 +451,7 @@ Local repo path when pointer was installed: \`${repoPath}\`
 async function installAgentPointer(projectArg, repoPathArg, machineArg) {
   const projectName = await ensureProject(projectArg);
   const repoPath = path.resolve(requireName(repoPathArg, "repo path"));
-  const machineName = requireName(machineArg || os.hostname(), "machine name");
+  const machineName = await resolveMachineName(machineArg || os.hostname());
   const agentsPath = path.join(repoPath, "AGENTS.md");
   const existing = await readTextIfExists(agentsPath);
   const pointer = agentPointerContent(projectName, repoPath, machineName);
@@ -369,12 +466,8 @@ async function installAgentPointer(projectArg, repoPathArg, machineArg) {
 }
 
 async function status() {
-  const machinesDir = path.join(brainRoot, "Machines");
   const projectsDir = path.join(brainRoot, "Projects");
-  const machines = (await readdir(machinesDir, { withFileTypes: true }))
-    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
-    .map((entry) => entry.name)
-    .sort();
+  const { aliases, machines } = await machineInventory();
   const projects = (await readdir(projectsDir, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
     .map((entry) => entry.name)
@@ -404,6 +497,10 @@ async function status() {
   console.log(`Brain: ${brainRoot}\n`);
   console.log(`Machines (${machines.length}):`);
   for (const machine of machines) console.log(`- ${machine}`);
+  if (Object.keys(aliases).length) {
+    console.log("\nMachine aliases:");
+    for (const [alias, canonical] of Object.entries(aliases)) console.log(`- ${alias} -> ${canonical}`);
+  }
   console.log(`\nProjects (${projects.length}):`);
   for (const project of projects) console.log(`- ${project}`);
   console.log("\nRecent sessions:");
@@ -487,6 +584,12 @@ function buildActivityFrontmatter({
   machine,
   cwd,
 }) {
+  const titleSuffix = sessionId && sessionId !== "multiple" && status !== "idle" ? ` / ${sessionId}` : "";
+  const description = sessionId === "multiple"
+    ? "Compatibility aggregate for concurrent sessions. Run `brain.mjs snapshot` for per-session details; do not edit this file directly."
+    : status === "idle"
+      ? "Compatibility summary of the most recently closed session. Historical record lives in `Session Log.md`."
+      : "One in-flight session on this machine. Removed when that session is marked idle; historical record lives in `Session Log.md`.";
   return `---
 status: ${status}
 agent: ${agent}
@@ -499,9 +602,9 @@ machine: ${machine}
 cwd: ${cwd}
 ---
 
-# Current Activity - ${machine}
+# Current Activity - ${machine}${titleSuffix}
 
-What this machine is doing right now. Overwritten on every session start; reset to \`status: idle\` on session end. Historical record lives in \`Session Log.md\`.
+${description}
 `;
 }
 
@@ -519,21 +622,159 @@ function parseFrontmatter(content) {
   return result;
 }
 
+function isLiveActivity(meta) {
+  return meta.status === "active" || meta.status === "paused";
+}
+
+function requireSessionId(value) {
+  const sessionId = requireName(value, "session id");
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(sessionId)) {
+    console.error(`Invalid session id: ${sessionId}`);
+    process.exit(1);
+  }
+  return sessionId;
+}
+
+function newActivitySessionId(agent, now = new Date()) {
+  const pad = (value) => String(value).padStart(2, "0");
+  const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return `${slug(agent) || "agent"}-${date}-${time}-${randomUUID().slice(0, 8)}`;
+}
+
+function activitySessionsDir(machineName) {
+  return path.join(machinesDir, machineName, "Activities");
+}
+
+function activitySessionPath(machineName, sessionId) {
+  return path.join(activitySessionsDir(machineName), `${requireSessionId(sessionId)}.md`);
+}
+
+async function readSessionActivities(machineName) {
+  const sessionsDir = activitySessionsDir(machineName);
+  if (!(await exists(sessionsDir))) return [];
+
+  const sessions = [];
+  for (const entry of await readdir(sessionsDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+    const filePath = path.join(sessionsDir, entry.name);
+    const content = await readTextIfExists(filePath);
+    const meta = parseFrontmatter(content);
+    if (!isLiveActivity(meta)) continue;
+    sessions.push({ content, filePath, meta });
+  }
+
+  return sessions.sort((left, right) =>
+    (left.meta.started || "").localeCompare(right.meta.started || "") ||
+    (left.meta.session_id || "").localeCompare(right.meta.session_id || ""),
+  );
+}
+
+async function importLegacyActivity(machineName) {
+  const legacyPath = path.join(machinesDir, machineName, "Current Activity.md");
+  const content = await readTextIfExists(legacyPath);
+  const meta = parseFrontmatter(content);
+  if (!isLiveActivity(meta) || !meta.session_id || meta.session_id === "multiple") return null;
+
+  const sessionId = requireSessionId(meta.session_id);
+  const sessionPath = activitySessionPath(machineName, sessionId);
+  if (!(await exists(sessionPath))) {
+    await mkdir(path.dirname(sessionPath), { recursive: true });
+    await writeFile(sessionPath, content, "utf8");
+    console.log(`migrated: ${path.relative(vaultRoot, legacyPath)} -> ${path.relative(vaultRoot, sessionPath)}`);
+  }
+  return sessionPath;
+}
+
+async function rebuildCurrentActivity(machineName, fallbackMeta = {}) {
+  const activityPath = path.join(machinesDir, machineName, "Current Activity.md");
+  const sessions = await readSessionActivities(machineName);
+
+  if (sessions.length === 1) {
+    await writeFile(activityPath, sessions[0].content, "utf8");
+    return;
+  }
+
+  const now = new Date();
+  const stamp = formatTimestamp(now);
+  if (sessions.length > 1) {
+    const activeCount = sessions.filter(({ meta }) => meta.status === "active").length;
+    const latestHeartbeat = sessions
+      .map(({ meta }) => meta.last_heartbeat || "")
+      .sort()
+      .at(-1) || stamp;
+    const earliestStart = sessions
+      .map(({ meta }) => meta.started || stamp)
+      .sort()[0];
+    const status = activeCount > 0 ? "active" : "paused";
+    const content = buildActivityFrontmatter({
+      status,
+      agent: "Multiple",
+      sessionId: "multiple",
+      started: earliestStart,
+      project: `Multiple (${sessions.length} sessions)`,
+      focus: `${sessions.length} concurrent sessions; run brain.mjs snapshot for details`,
+      lastHeartbeat: latestHeartbeat,
+      machine: machineName,
+      cwd: "Multiple",
+    });
+    await writeFile(activityPath, content, "utf8");
+    return;
+  }
+
+  const existing = parseFrontmatter(await readTextIfExists(activityPath));
+  const content = buildActivityFrontmatter({
+    status: "idle",
+    agent: fallbackMeta.agent || existing.agent || "—",
+    sessionId: fallbackMeta.session_id || existing.session_id || "—",
+    started: fallbackMeta.started || existing.started || stamp,
+    project: fallbackMeta.project || existing.project || "—",
+    focus: "(idle)",
+    lastHeartbeat: stamp,
+    machine: machineName,
+    cwd: fallbackMeta.cwd || existing.cwd || "—",
+  });
+  await writeFile(activityPath, content, "utf8");
+}
+
+async function selectSessionActivity(machineName, requestedSessionId, action) {
+  await importLegacyActivity(machineName);
+  const sessions = await readSessionActivities(machineName);
+
+  if (requestedSessionId) {
+    const sessionId = requireSessionId(requestedSessionId);
+    const match = sessions.find(({ meta }) => meta.session_id === sessionId);
+    if (!match) {
+      console.error(`No active session ${sessionId} for ${machineName}. Run snapshot to list active sessions.`);
+      process.exit(1);
+    }
+    return match;
+  }
+
+  if (sessions.length === 1) return sessions[0];
+  if (sessions.length === 0) return null;
+
+  console.error(`Multiple active sessions exist for ${machineName}; pass --session <session_id> to ${action}.`);
+  for (const { meta } of sessions) {
+    console.error(`- ${meta.session_id}: ${meta.project} — ${meta.focus}`);
+  }
+  process.exit(1);
+}
+
 async function startup(machineArg, optionArgs) {
-  const machineName = requireName(machineArg || os.hostname(), "machine name");
+  const machineName = await resolveMachineName(machineArg || os.hostname());
   const options = parseOptions(optionArgs);
   const agent = options.agent || "Unknown agent";
   const project = options.project || "Unknown";
   const focus = options.focus || "Starting work";
   const cwd = options.cwd || process.cwd();
   const machineDir = path.join(brainRoot, "Machines", machineName);
-  const activityPath = path.join(machineDir, "Current Activity.md");
 
   await mkdir(machineDir, { recursive: true });
+  await importLegacyActivity(machineName);
 
   const now = new Date();
-  const { date, time } = timestampParts(now);
-  const sessionId = `${slug(agent)}-${date.replace(/-/g, "")}-${time}`;
+  const sessionId = newActivitySessionId(agent, now);
   const stamp = formatTimestamp(now);
 
   const content = buildActivityFrontmatter({
@@ -548,23 +789,24 @@ async function startup(machineArg, optionArgs) {
     cwd,
   });
 
-  await writeFile(activityPath, content, "utf8");
-  console.log(`updated: ${path.relative(vaultRoot, activityPath)}`);
+  const sessionPath = activitySessionPath(machineName, sessionId);
+  await mkdir(path.dirname(sessionPath), { recursive: true });
+  await writeFile(sessionPath, content, "utf8");
+  await rebuildCurrentActivity(machineName);
+  console.log(`updated: ${path.relative(vaultRoot, sessionPath)}`);
   console.log(`session_id: ${sessionId}`);
 }
 
 async function activity(machineArg, optionArgs) {
-  const machineName = requireName(machineArg || os.hostname(), "machine name");
+  const machineName = await resolveMachineName(machineArg || os.hostname());
   const options = parseOptions(optionArgs);
-  const activityPath = path.join(brainRoot, "Machines", machineName, "Current Activity.md");
-  const existing = await readTextIfExists(activityPath);
-
-  if (!existing) {
-    console.error(`No Current Activity file for ${machineName}. Run startup first.`);
+  const selected = await selectSessionActivity(machineName, options.session, "update activity");
+  if (!selected) {
+    console.error(`No active session for ${machineName}. Run startup first.`);
     process.exit(1);
   }
 
-  const meta = parseFrontmatter(existing);
+  const meta = selected.meta;
   const now = new Date();
   const stamp = formatTimestamp(now);
 
@@ -580,43 +822,85 @@ async function activity(machineArg, optionArgs) {
     cwd: options.cwd || meta.cwd || process.cwd(),
   });
 
-  await writeFile(activityPath, updated, "utf8");
-  console.log(`heartbeat: ${path.relative(vaultRoot, activityPath)} @ ${stamp}`);
+  await writeFile(selected.filePath, updated, "utf8");
+  await rebuildCurrentActivity(machineName);
+  console.log(`heartbeat: ${path.relative(vaultRoot, selected.filePath)} @ ${stamp}`);
+  console.log(`session_id: ${meta.session_id}`);
 }
 
-async function idle(machineArg) {
-  const machineName = requireName(machineArg || os.hostname(), "machine name");
-  const activityPath = path.join(brainRoot, "Machines", machineName, "Current Activity.md");
-  const existing = await readTextIfExists(activityPath);
-  const meta = parseFrontmatter(existing);
-  const now = new Date();
-  const stamp = formatTimestamp(now);
+async function idle(machineArg, optionArgs) {
+  const machineName = await resolveMachineName(machineArg || os.hostname());
+  const options = parseOptions(optionArgs);
+  await importLegacyActivity(machineName);
+  const sessions = await readSessionActivities(machineName);
 
-  const updated = buildActivityFrontmatter({
-    status: "idle",
-    agent: meta.agent || "—",
-    sessionId: meta.session_id || "—",
-    started: meta.started || stamp,
-    project: meta.project || "—",
-    focus: "(idle)",
-    lastHeartbeat: stamp,
-    machine: machineName,
-    cwd: meta.cwd || "—",
-  });
+  if (options.all === "true") {
+    for (const session of sessions) await unlink(session.filePath);
+    await rebuildCurrentActivity(machineName, sessions.at(-1)?.meta || {});
+    console.log(`idle: ${machineName} (${sessions.length} session${sessions.length === 1 ? "" : "s"} cleared)`);
+    return;
+  }
 
-  await writeFile(activityPath, updated, "utf8");
-  console.log(`idle: ${path.relative(vaultRoot, activityPath)}`);
+  const selected = await selectSessionActivity(machineName, options.session, "mark idle");
+  if (!selected) {
+    await rebuildCurrentActivity(machineName);
+    console.log(`idle: ${path.relative(vaultRoot, path.join(machinesDir, machineName, "Current Activity.md"))}`);
+    return;
+  }
+
+  await unlink(selected.filePath);
+  await rebuildCurrentActivity(machineName, selected.meta);
+  console.log(`idle: ${path.relative(vaultRoot, selected.filePath)}`);
+  console.log(`session_id: ${selected.meta.session_id}`);
+}
+
+async function reap(machineArg, optionArgs) {
+  const machineName = await resolveMachineName(machineArg || os.hostname());
+  const options = parseOptions(optionArgs);
+  const hours = Number(options.hours || 48);
+  if (!Number.isFinite(hours) || hours <= 0) {
+    console.error(`Invalid --hours value: ${options.hours}`);
+    process.exit(1);
+  }
+  const cutoffStamp = formatTimestamp(new Date(Date.now() - hours * 3600 * 1000));
+
+  await importLegacyActivity(machineName);
+  const sessions = await readSessionActivities(machineName);
+  let removed = 0;
+  for (const session of sessions) {
+    // Ghost = no heartbeat within the window. Sessions die without cleanup when a
+    // terminal is killed (SessionEnd hooks never fire), so anything this stale is dead.
+    const heartbeat = session.meta.last_heartbeat || session.meta.started || "";
+    if (heartbeat && heartbeat < cutoffStamp) {
+      await unlink(session.filePath);
+      removed += 1;
+      console.log(`reaped: ${path.relative(vaultRoot, session.filePath)} (heartbeat ${heartbeat})`);
+    }
+  }
+  if (removed > 0) await rebuildCurrentActivity(machineName);
+  console.log(`reap: ${machineName} — ${removed} stale session(s) removed (heartbeat older than ${cutoffStamp})`);
 }
 
 async function snapshot() {
-  const machinesDir = path.join(brainRoot, "Machines");
-  const machines = (await readdir(machinesDir, { withFileTypes: true }))
-    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
-    .map((entry) => entry.name)
-    .sort();
+  const { aliasesByCanonical, machines } = await machineInventory();
 
   console.log("\nIn-flight activity across all machines:\n");
   for (const machineName of machines) {
+    const sessions = await readSessionActivities(machineName);
+    const aliases = aliasesByCanonical.get(machineName) || [];
+    const displayName = aliases.length ? `${machineName} (aliases: ${aliases.join(", ")})` : machineName;
+    if (sessions.length) {
+      const machineFlag = sessions.some(({ meta }) => meta.status === "active") ? "ACTIVE " : "PAUSED ";
+      console.log(`  ${machineFlag} ${displayName}  sessions=${sessions.length}`);
+      for (const { meta } of sessions) {
+        const flag = meta.status === "active" ? "ACTIVE " : "PAUSED ";
+        console.log(`    ${flag} ${meta.session_id || "?"}  agent=${meta.agent || "?"}  project=${meta.project || "?"}`);
+        console.log(`             focus: ${meta.focus || "?"}`);
+        console.log(`             started: ${meta.started || "?"}   heartbeat: ${meta.last_heartbeat || "?"}`);
+      }
+      continue;
+    }
+
     const activityPath = path.join(machinesDir, machineName, "Current Activity.md");
     const content = await readTextIfExists(activityPath);
     if (!content) {
@@ -625,7 +909,7 @@ async function snapshot() {
     }
     const meta = parseFrontmatter(content);
     const flag = meta.status === "active" ? "ACTIVE " : meta.status === "paused" ? "PAUSED " : "idle   ";
-    console.log(`  ${flag} ${machineName}  agent=${meta.agent || "?"}  project=${meta.project || "?"}`);
+    console.log(`  ${flag} ${displayName}  agent=${meta.agent || "?"}  project=${meta.project || "?"}`);
     console.log(`           focus: ${meta.focus || "?"}`);
     console.log(`           started: ${meta.started || "?"}   heartbeat: ${meta.last_heartbeat || "?"}`);
   }
@@ -649,7 +933,7 @@ async function logEvent(kindArg, subjectArg) {
 }
 
 async function daily(machineArg) {
-  const machineName = requireName(machineArg || os.hostname(), "machine name");
+  const machineName = await resolveMachineName(machineArg || os.hostname());
   const projectsDir = path.join(brainRoot, "Projects");
   const projects = (await readdir(projectsDir, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
@@ -729,7 +1013,7 @@ ${todayLogEntries || "- (none)"}
 }
 
 async function codexInstall(machineArg, optionArgs = []) {
-  const machineName = requireName(machineArg || os.hostname(), "machine name");
+  const machineName = await resolveMachineName(machineArg || os.hostname());
   const options = parseOptions(optionArgs);
   const force = options.force === "true" || options.force === true;
   const snippetPath = path.join(brainRoot, "docs", "codex-agents-snippet.md");
@@ -865,12 +1149,20 @@ async function installClaudeSkills(optionArgs) {
   const force = options.force === "true" || options.force === true;
   const sourceRoot = path.join(brainRoot, "skills-claude-code");
   const targetRoot = path.join(os.homedir(), ".claude", "skills");
-  const skillNames = ["brain-startup", "brain-closeout", "brain-daily", "brain-bootstrap"];
 
   if (!(await exists(sourceRoot))) {
     console.error(`Canonical skills directory not found: ${sourceRoot}`);
     console.error("Run from a fully bootstrapped vault, or git pull to fetch them.");
     process.exit(1);
+  }
+
+  // Dynamic: any directory under skills-claude-code/ with a SKILL.md is a canonical
+  // skill. The whole directory is copied (skills may carry scripts/, references/, etc.).
+  const entries = await readdir(sourceRoot, { withFileTypes: true });
+  const skillNames = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (await exists(path.join(sourceRoot, entry.name, "SKILL.md"))) skillNames.push(entry.name);
   }
 
   await mkdir(targetRoot, { recursive: true });
@@ -880,31 +1172,23 @@ async function installClaudeSkills(optionArgs) {
   let updated = 0;
 
   for (const name of skillNames) {
-    const sourcePath = path.join(sourceRoot, name, "SKILL.md");
+    const sourceDir = path.join(sourceRoot, name);
     const targetDir = path.join(targetRoot, name);
-    const targetPath = path.join(targetDir, "SKILL.md");
+    const targetExists = await exists(path.join(targetDir, "SKILL.md"));
 
-    if (!(await exists(sourcePath))) {
-      console.error(`  missing source: ${sourcePath} — skipping ${name}`);
-      continue;
-    }
-
-    const targetExists = await exists(targetPath);
     if (targetExists && !force) {
-      console.log(`  exists:    ~/.claude/skills/${name}/SKILL.md (use --force to overwrite)`);
+      console.log(`  exists:    ~/.claude/skills/${name}/ (use --force to overwrite)`);
       skipped += 1;
       continue;
     }
 
-    await mkdir(targetDir, { recursive: true });
-    const content = await readFile(sourcePath, "utf8");
-    await writeFile(targetPath, content, "utf8");
+    await cp(sourceDir, targetDir, { recursive: true, force: true });
 
     if (targetExists) {
-      console.log(`  updated:   ~/.claude/skills/${name}/SKILL.md`);
+      console.log(`  updated:   ~/.claude/skills/${name}/`);
       updated += 1;
     } else {
-      console.log(`  installed: ~/.claude/skills/${name}/SKILL.md`);
+      console.log(`  installed: ~/.claude/skills/${name}/`);
       installed += 1;
     }
   }
@@ -917,6 +1201,9 @@ async function installClaudeSkills(optionArgs) {
 }
 
 switch (command) {
+  case "whoami":
+    await whoami(args[1]);
+    break;
   case "init-machine":
     await initMachine(args[1]);
     break;
@@ -954,7 +1241,10 @@ switch (command) {
     await activity(args[1], args.slice(2));
     break;
   case "idle":
-    await idle(args[1]);
+    await idle(args[1], args.slice(2));
+    break;
+  case "reap":
+    await reap(args[1], args.slice(2));
     break;
   case "snapshot":
     await snapshot();

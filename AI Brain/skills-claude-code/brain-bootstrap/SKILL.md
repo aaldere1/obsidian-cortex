@@ -37,7 +37,7 @@ Quick orientation:
 
 ## When to NOT invoke
 
-- If `AI Brain/Machines/<thismachine>/` already exists and `Current Activity.md` shows recent heartbeat — this machine is already bootstrapped. Invoke `brain-startup` instead to begin a normal session.
+- If `AI Brain/Machines/<thismachine>/` already exists and `snapshot` shows recent activity — this machine is already bootstrapped. Invoke `brain-startup` instead to begin a normal session.
 - If the user just wants to start a session on an already-configured machine — that's `brain-startup`, not this skill.
 
 This skill is for **first-time machine setup only**. Once bootstrapped, the normal session lifecycle is `brain-startup` → work → `brain-closeout` → (optional) `brain-daily`.
