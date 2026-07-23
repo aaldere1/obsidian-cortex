@@ -649,7 +649,9 @@ function isLiveActivity(meta) {
 
 function requireSessionId(value) {
   const sessionId = requireName(value, "session id");
-  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(sessionId)) {
+  // No "." in the charset (and no separators): generated ids are
+  // agent-date-time-hex, so a session id can never form a path-traversal token.
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(sessionId)) {
     console.error(`Invalid session id: ${sessionId}`);
     process.exit(1);
   }
@@ -668,7 +670,16 @@ function activitySessionsDir(machineName) {
 }
 
 function activitySessionPath(machineName, sessionId) {
-  return path.join(activitySessionsDir(machineName), `${requireSessionId(sessionId)}.md`);
+  const dir = activitySessionsDir(machineName);
+  const filePath = path.join(dir, `${requireSessionId(sessionId)}.md`);
+  // Defense in depth: the validated id cannot contain a separator, but assert the
+  // resolved path stays inside Activities/ so no id can ever escape the directory.
+  const rel = path.relative(dir, filePath);
+  if (rel.startsWith("..") || path.isAbsolute(rel)) {
+    console.error(`Refusing session path outside Activities: ${sessionId}`);
+    process.exit(1);
+  }
+  return filePath;
 }
 
 async function readSessionActivities(machineName) {
