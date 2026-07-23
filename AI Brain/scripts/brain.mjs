@@ -160,7 +160,16 @@ function resolveAliasChain(name, aliases) {
 }
 
 async function machineDirectoryNames() {
-  return (await readdir(machinesDir, { withFileTypes: true }))
+  let entries;
+  try {
+    entries = await readdir(machinesDir, { withFileTypes: true });
+  } catch (error) {
+    // Fresh vault: Machines/ doesn't exist yet (before any init-machine).
+    // Treat as "no machines registered" rather than crashing whoami/snapshot.
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+  return entries
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
     .map((entry) => entry.name)
     .sort();
