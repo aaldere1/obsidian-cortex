@@ -35,6 +35,8 @@ If Obsidian is installed, open this folder as a vault.
 
 The machine name is the folder under `AI Brain/Machines/`. It's how other machines see this computer in the snapshot. Pick something stable and short. Examples: `Laptop`, `MBP-Studio`, `Mac-Mini`, `Windows-Desktop`. **Use the exact same name forever** — renaming later orphans the history.
 
+If this computer's OS hostname differs from the folder name you pick (or changes over time), add a mapping to `AI Brain/Machines/aliases.json` — e.g. `{ "my-laptops-hostname.local": "Laptop" }`. From then on `node "AI Brain/scripts/brain.mjs" whoami` resolves the live hostname through that table to the canonical folder, so every later session targets the right machine automatically and no session can write another machine's records.
+
 For the rest of this doc, replace `<MACHINE>` with the name you picked.
 
 ---

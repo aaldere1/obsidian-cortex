@@ -59,7 +59,7 @@ You re-explain your stack. Your preferences. What you were doing yesterday. What
 - ✅ Git is the entire sync engine
 - ✅ Zero dependencies, zero servers
 - ✅ Works in Obsidian's graph + backlinks for free
-- ✅ Live cross-machine "who's doing what"
+- ✅ Live cross-machine, multi-session "who's doing what"
 - ✅ Secrets-by-design kept *out*
 
 </td>
@@ -142,10 +142,11 @@ Drop the included `.claude/skills/` into Claude Code (or the `AGENTS.md` block i
 <summary>🔧 The underlying commands (the slash commands call these for you)</summary>
 
 ```bash
-node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Claude Code" --project "My Project" --focus "Refactoring auth"
-node "AI Brain/scripts/brain.mjs" activity "Laptop" --heartbeat
-node "AI Brain/scripts/brain.mjs" snapshot      # who's doing what across all machines
+node "AI Brain/scripts/brain.mjs" whoami        # resolve this machine's canonical name (hostname/aliases)
+node "AI Brain/scripts/brain.mjs" startup "Laptop" --agent "Claude Code" --project "My Project" --focus "Refactoring auth"   # prints a session_id
+node "AI Brain/scripts/brain.mjs" snapshot      # who's doing what across all machines (per session)
 node "AI Brain/scripts/brain.mjs" closeout "My Project" "Auth refactor" "Laptop" --summary "..." --next "..."
+node "AI Brain/scripts/brain.mjs" reap "Laptop" # clear ghost sessions after a crash (no heartbeat in 48h)
 ```
 </details>
 
