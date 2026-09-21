@@ -1,16 +1,12 @@
 #!/bin/bash
-# brain-skill-sync.sh — auto-sync canonical AI Brain skills from the Obsidian vault
-# to ~/.claude/skills/ on Claude Code session start.
+# brain-skill-sync.sh — auto-sync canonical AI Brain agent integrations
+# from the Obsidian vault on Claude Code session start.
 #
-# Designed to be wired up via ~/.claude/settings.json hooks.SessionStart.
-# Install with: node "AI Brain/scripts/brain.mjs" install-claude-hook
-#
-# Properties:
-# - Discovers ALL canonical skill directories dynamically (any directory with SKILL.md)
-# - Silent unless an update was actually applied
-# - Never blocks or fails the session (always exits 0)
-# - Skips quickly if vault is missing or this isn't the obsidian-cortex repo
-# - Honors $BRAIN_VAULT env var to override the default vault path
+# - Discovers ALL canonical Claude skills dynamically (any directory with SKILL.md)
+# - Refreshes the canonical Codex AI Brain block too, when Codex is installed
+# - Pulls latest vault state first
+# - Never blocks/fails the session
+# - Honors $BRAIN_VAULT
 
 set +e
 
@@ -28,23 +24,39 @@ esac
 
 (cd "$VAULT" && git pull --ff-only --quiet 2>/dev/null) || true
 
-[ ! -d "$SRC_ROOT" ] && exit 0
+UPDATED=0
 
-NEEDS_UPDATE=0
-while IFS= read -r skill_file; do
-  skill_dir=$(dirname "$skill_file")
-  skill=$(basename "$skill_dir")
-  dst="$DST_ROOT/$skill/SKILL.md"
+# Dynamically discover every canonical Claude skill.
+if [ -d "$SRC_ROOT" ]; then
+  NEEDS_UPDATE=0
+  while IFS= read -r skill_file; do
+    skill_dir=$(dirname "$skill_file")
+    skill=$(basename "$skill_dir")
+    dst="$DST_ROOT/$skill/SKILL.md"
 
-  if [ ! -f "$dst" ] || ! diff -q "$skill_file" "$dst" > /dev/null 2>&1; then
-    NEEDS_UPDATE=1
-    break
+    if [ ! -f "$dst" ] || ! diff -q "$skill_file" "$dst" > /dev/null 2>&1; then
+      NEEDS_UPDATE=1
+      break
+    fi
+  done < <(find "$SRC_ROOT" -mindepth 2 -maxdepth 2 -name SKILL.md -type f 2>/dev/null | sort)
+
+  if [ "$NEEDS_UPDATE" -eq 1 ]; then
+    node "$VAULT/AI Brain/scripts/brain.mjs" install-claude-skills --force > /dev/null 2>&1
+    UPDATED=1
   fi
-done < <(find "$SRC_ROOT" -mindepth 2 -maxdepth 2 -name SKILL.md -type f 2>/dev/null | sort)
+fi
 
-if [ "$NEEDS_UPDATE" -eq 1 ]; then
-  node "$VAULT/AI Brain/scripts/brain.mjs" install-claude-skills --force > /dev/null 2>&1
-  echo "🧠 Brain skills updated from vault — new versions take effect this session."
+# Keep Codex's installed AI Brain block current too.
+# whoami resolves host aliases to the canonical machine folder.
+if [ -f "$HOME/.codex/AGENTS.md" ]; then
+  CANONICAL=$(node "$VAULT/AI Brain/scripts/brain.mjs" whoami 2>/dev/null | awk -F': *' '/^canonical:/ {print $2; exit}')
+  if [ -n "$CANONICAL" ]; then
+    node "$VAULT/AI Brain/scripts/brain.mjs" codex-install "$CANONICAL" --force > /dev/null 2>&1
+  fi
+fi
+
+if [ "$UPDATED" -eq 1 ]; then
+  echo "🧠 AI Brain integrations updated from vault — canonical skills/protocol are current."
 fi
 
 exit 0
