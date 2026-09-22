@@ -1,7 +1,7 @@
 ---
 knowledge_domain: apple-platform-development
 status: active
-verified: 2026-09-21
+verified: 2026-09-22
 owners: [AI Brain]
 source_policy: primary-first
 ---
@@ -15,8 +15,9 @@ Canonical agent-facing knowledge for Swift, SwiftUI, Metal, SwiftUI shaders, Xco
 - Xcode 27 shipped 2026-09-14.
 - iOS/iPadOS/macOS/tvOS/visionOS/watchOS 27.0 shipped 2026-09-14.
 - Swift 6.4 shipped 2026-09-15.
-- Xcode 27.1 / iOS 27.1 support includes iPhone Duo APIs and is currently beta as of 2026-09-21.
-- Xcode 27.2 / iOS 27.2 is also beta as of 2026-09-21.
+- Xcode 27.1 beta (27A9269) shipped 2026-09-18 and is currently the required beta branch for iPhone Duo support.
+- iOS/iPadOS/macOS/tvOS/visionOS 27.2 beta 2 shipped 2026-09-21.
+- Xcode 27.2 beta is active, includes Swift 6.4 and 27.2 SDKs, but Apple directs Duo development to Xcode 27.1 beta.
 
 ## Agent rule
 
@@ -35,12 +36,14 @@ Before implementing or diagnosing Apple-platform code:
 - [[Swift/Swift-6.4]]
 - [[Swift/Concurrency-and-Observation]]
 - [[Swift/Performance-Primitives]]
+- [[Swift/Evolution-Watch]]
 
 ### SwiftUI
 - [[SwiftUI/iOS-27-and-Xcode-27]]
 - [[SwiftUI/State-and-Invalidation]]
 - [[SwiftUI/Lazy-Stacks-and-Scrolling]]
 - [[SwiftUI/Adaptive-Layout-and-iPhone-Duo]]
+- [[SwiftUI/Document-API]]
 
 ### Shaders
 - [[Shaders/SwiftUI-Shader-API]]
@@ -70,6 +73,7 @@ Before implementing or diagnosing Apple-platform code:
 ## Primary sources
 
 - https://developer.apple.com/news/releases/
+- https://developer.apple.com/news/
 - https://developer.apple.com/swiftui/whats-new/
 - https://developer.apple.com/videos/wwdc2026/
 - https://developer.apple.com/documentation/swiftui/shader
