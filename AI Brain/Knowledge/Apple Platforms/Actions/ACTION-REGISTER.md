@@ -1,6 +1,6 @@
 ---
 status: active
-verified: 2026-09-21
+verified: 2026-09-22
 ---
 
 # Apple Platform Engineering Action Register
@@ -99,8 +99,17 @@ These are candidate actions for app-development agents. They are not automatical
 ## APPLE-012 — Prepare adaptive primary/secondary layout for Duo
 - Status: blocked
 - Priority: P2
-- Deployment gate: iOS 27.1 / Xcode 27.1; currently beta 2026-09-21
+- Deployment gate: iOS 27.1 / Xcode 27.1; currently beta 2026-09-22
 - Trigger: app has a meaningful player/detail + secondary-list layout or targets iPhone Duo
 - Action: prototype ArrangementView and reserved regions on a beta branch.
 - Acceptance: no production dependency before API/SDK gate is approved.
 - Knowledge: [[../SwiftUI/Adaptive-Layout-and-iPhone-Duo]]
+
+## APPLE-013 — Evaluate the new SwiftUI Document architecture
+- Status: blocked
+- Priority: P1
+- Deployment gate: API is currently documented as Beta as of 2026-09-22
+- Trigger: document-based app, editor, creative tool, or package format with expensive reads/writes
+- Action: prototype ReadableDocument/WritableDocument + DocumentReader/DocumentWriter; keep snapshot/apply lightweight on Main Actor; move serialization and disk I/O to the provided background path; use previous snapshots for incremental writes.
+- Acceptance: beta branch demonstrates lower main-thread I/O cost and correct autosave/undo behavior, with no production dependency until API status is cleared.
+- Knowledge: [[../SwiftUI/Document-API]]
