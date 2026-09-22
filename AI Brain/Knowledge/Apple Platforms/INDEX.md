@@ -8,7 +8,7 @@ source_policy: primary-first
 
 # Apple Platform Engineering Intelligence
 
-Canonical agent-facing knowledge for Swift, SwiftUI, Metal, SwiftUI shaders, Xcode/Instruments, and iOS performance.
+Canonical agent-facing knowledge for Swift, SwiftUI, Metal, SwiftUI shaders, Xcode/Instruments, privacy, and Apple-platform performance.
 
 ## Current shipping baseline
 
@@ -16,8 +16,8 @@ Canonical agent-facing knowledge for Swift, SwiftUI, Metal, SwiftUI shaders, Xco
 - iOS/iPadOS/macOS/tvOS/visionOS/watchOS 27.0 shipped 2026-09-14.
 - Swift 6.4 shipped 2026-09-15.
 - Xcode 27.1 beta (27A9269) shipped 2026-09-18 and is currently the required beta branch for iPhone Duo support.
-- iOS/iPadOS/macOS/tvOS/visionOS 27.2 beta 2 shipped 2026-09-21.
-- Xcode 27.2 beta is active, includes Swift 6.4 and 27.2 SDKs, but Apple directs Duo development to Xcode 27.1 beta.
+- iOS/iPadOS/macOS/tvOS/visionOS/watchOS 27.2 beta 2 shipped 2026-09-21.
+- Xcode 27.2 beta (27B5019j) is active, includes Swift 6.4 and 27.2 SDKs, but Apple directs Duo development to Xcode 27.1 beta.
 
 ## Agent rule
 
@@ -29,6 +29,7 @@ Before implementing or diagnosing Apple-platform code:
 5. Check deployment target and status before proposing an API.
 6. Do not silently use beta-only APIs in production code.
 7. Profile before applying micro-optimizations.
+8. When using coding agents, preserve build/test/preview verification rather than trusting generated code without validation.
 
 ## Topic map
 
@@ -44,6 +45,13 @@ Before implementing or diagnosing Apple-platform code:
 - [[SwiftUI/Lazy-Stacks-and-Scrolling]]
 - [[SwiftUI/Adaptive-Layout-and-iPhone-Duo]]
 - [[SwiftUI/Document-API]]
+
+### Xcode and agents
+- [[Xcode/Xcode-27.2-Beta]]
+- [[Xcode/Agentic-Coding-and-MCP]]
+
+### Privacy
+- [[Privacy/App-Tracking-Transparency-iOS-27.2]]
 
 ### Shaders
 - [[Shaders/SwiftUI-Shader-API]]
@@ -74,10 +82,13 @@ Before implementing or diagnosing Apple-platform code:
 
 - https://developer.apple.com/news/releases/
 - https://developer.apple.com/news/
+- https://developer.apple.com/documentation/xcode-release-notes/
 - https://developer.apple.com/swiftui/whats-new/
 - https://developer.apple.com/videos/wwdc2026/
 - https://developer.apple.com/documentation/swiftui/shader
 - https://developer.apple.com/wwdc26/guides/metal/
+- https://developer.apple.com/app-store/user-privacy-and-data-use/
 - https://www.swift.org/blog/swift-6.4-released/
+- https://github.com/swiftlang/swift-evolution
 
 See [[_SOURCE-POLICY]] and [[_AUTOMATION-PROTOCOL]].
