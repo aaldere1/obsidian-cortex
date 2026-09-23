@@ -1,6 +1,6 @@
 ---
 status: active
-verified: 2026-09-22
+verified: 2026-09-23
 ---
 
 # Apple Platform Engineering Action Register
@@ -99,7 +99,7 @@ These are candidate actions for app-development agents. They are not automatical
 ## APPLE-012 — Prepare adaptive primary/secondary layout for Duo
 - Status: blocked
 - Priority: P2
-- Deployment gate: iOS 27.1 / Xcode 27.1; currently beta 2026-09-22
+- Deployment gate: iOS 27.1 / Xcode 27.1; currently beta 2026-09-23
 - Trigger: app has a meaningful player/detail + secondary-list layout or targets iPhone Duo
 - Action: prototype ArrangementView and reserved regions on a beta branch.
 - Acceptance: no production dependency before API/SDK gate is approved.
@@ -108,7 +108,7 @@ These are candidate actions for app-development agents. They are not automatical
 ## APPLE-013 — Evaluate the new SwiftUI Document architecture
 - Status: blocked
 - Priority: P1
-- Deployment gate: API is currently documented as Beta as of 2026-09-22
+- Deployment gate: API is currently documented as Beta as of 2026-09-23
 - Trigger: document-based app, editor, creative tool, or package format with expensive reads/writes
 - Action: prototype ReadableDocument/WritableDocument + DocumentReader/DocumentWriter; keep snapshot/apply lightweight on Main Actor; move serialization and disk I/O to the provided background path; use previous snapshots for incremental writes.
 - Acceptance: beta branch demonstrates lower main-thread I/O cost and correct autosave/undo behavior, with no production dependency until API status is cleared.
@@ -149,3 +149,39 @@ These are candidate actions for app-development agents. They are not automatical
 - Performance verification: for performance tasks, require Instruments evidence before and after; otherwise use build/test/preview validation.
 - Sources: https://developer.apple.com/documentation/xcode/extending-and-customizing-agents ; https://developer.apple.com/videos/play/tech-talks/111428/ ; https://developer.apple.com/videos/play/wwdc2026/259/
 - Knowledge: [[../Xcode/Agentic-Coding-and-MCP]]
+
+## APPLE-017 — Migrate On-Demand Resources to Background Assets
+- Status: ready
+- Priority: P0
+- Target: apps/games that still use On-Demand Resources or `NSBundleResourceRequest`
+- Deployment gate: Background Assets is available on current supported Apple OS generations, but exact API availability varies by symbol; preserve fallback support where older deployment targets require it.
+- Trigger: project contains ODR tags, `NSBundleResourceRequest`, or App Store-hosted ODR content.
+- Action: inventory ODR packs/tags and access patterns; redesign delivery boundaries as Background Asset packs; choose Apple-hosted or self-hosted delivery; migrate runtime access and CI/content-release automation; verify install, first launch, update, interrupted download, low-storage, offline, and localization behavior before removing ODR.
+- Acceptance: no user-visible content regression on supported OS versions; Background Asset update/release flow is documented and tested; ODR usage is removed or explicitly isolated to a compatibility path.
+- Performance verification: compare app download/install size, time-to-first-usable-content, background transfer behavior, storage use, and update behavior before/after migration.
+- Sources: https://developer.apple.com/app-store/whats-new/ ; https://developer.apple.com/help/app-store-connect/reference/app-uploads/on-demand-resources-size-limits ; https://developer.apple.com/help/app-store-connect/manage-asset-packs/overview-of-apple-hosted-asset-packs
+- Knowledge: [[../Distribution/Background-Assets-and-ODR-Migration]]
+
+## APPLE-018 — Refresh App Store Connect automation against API 4.5
+- Status: proposed
+- Priority: P2
+- Target: teams with generated App Store Connect API clients or CI/CD that directly calls App Store Connect API
+- Deployment gate: App Store Connect API 4.5 released 2026-09-22.
+- Trigger: repository pins an older App Store Connect OpenAPI spec/client or needs newly documented distribution/asset capabilities.
+- Action: fetch and pin the 4.5 OpenAPI specification; diff it against the currently pinned version; regenerate clients only on a branch; run integration tests for the exact endpoints used by build upload, TestFlight, metadata, review, subscriptions, and assets.
+- Acceptance: generated-code diff is understood; authentication and all used API workflows pass; no unreviewed endpoint/enum behavior change reaches production automation.
+- Performance verification: not runtime performance; measure CI reliability and request/error regressions.
+- Sources: https://developer.apple.com/news/releases/ ; https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-release-notes
+- Knowledge: [[../Distribution/App-Store-Connect-and-Submission]]
+
+## APPLE-019 — Audit September 2026 social-media submission requirements
+- Status: ready
+- Priority: P1
+- Target: apps/games with social feeds, user posts, messaging/community features, or other functionality Apple classifies as social media
+- Deployment gate: current App Store submission/notarization policy beginning September 2026.
+- Trigger: app includes or is adding social-media capabilities, or the age-rating questionnaire has not been re-audited since September 2026.
+- Action: verify the App Store Connect social-media declaration and age-rating answers; if social features are disabled for users under 13, verify use of the Declared Age Range API at minimum; test resulting age/category behavior and notarization metadata where alternative distribution applies.
+- Acceptance: metadata matches actual product behavior; required age-range checks are implemented where applicable; submission succeeds without avoidable age-rating/social-media metadata defects.
+- Performance verification: not applicable; verify policy/metadata/runtime gating behavior.
+- Sources: https://developer.apple.com/app-store/whats-new/ ; https://developer.apple.com/wwdc26/guides/app-store/
+- Knowledge: [[../Distribution/App-Store-Connect-and-Submission]]
