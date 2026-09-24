@@ -45,13 +45,8 @@ At the start of meaningful work:
    - `<VAULT>/AI Brain/Machines/<MACHINE>/Current Activity.md`
 5. Read `<VAULT>/index.md` and relevant synthesis/tool/infrastructure pages.
 6. If the current repo has matching project memory, read Overview, Current State, Next Steps, and Decisions.
-7. **Specialist knowledge domains:** if the task involves Swift, SwiftUI, iOS/iPadOS/macOS app development, Metal, shaders, Xcode/Instruments, or Apple-platform performance, read:
-   - `<VAULT>/AI Brain/Knowledge/Apple Platforms/INDEX.md`
-   - `<VAULT>/AI Brain/Knowledge/Apple Platforms/Actions/ACTION-REGISTER.md`
-   - only the relevant topic pages.
-   Prefer current primary-source-verified brain knowledge over recalled framework behavior. Respect SHIPPING/BETA deployment gates. Performance work must include a measurement/verification step.
-8. If no project memory exists and the work is meaningful, create it in AI Brain rather than adding memory files to the repo.
-9. Register the activity:
+7. If no project memory exists and the work is meaningful, create it in AI Brain rather than adding memory files to the repo.
+8. Register the activity:
 
 ```sh
 node "AI Brain/scripts/brain.mjs" startup "<MACHINE>" \
@@ -68,7 +63,6 @@ At closeout:
 2. Run `brain.mjs closeout`.
 3. Log wiki/knowledge ingestion when applicable.
 4. Mark the machine/session idle.
-5. If Apple-platform research produced a durable new technique or changed API status, update the canonical Apple Platforms knowledge pages and action register rather than leaving the discovery only in a session summary.
 
 Do not store secrets, credentials, raw terminal logs, or full chat transcripts.
 

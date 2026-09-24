@@ -106,16 +106,6 @@ If no project memory exists for an obviously meaningful project, suggest creatin
 
 Read `index.md` (vault root). If the user's task overlaps with any entry under `Synthesis/`, `Infrastructure/`, or `Tools/`, read those pages too.
 
-### 5.5. Load specialist engineering knowledge when relevant
-
-If the task involves Swift, SwiftUI, Apple platform app development, Metal, shaders, Xcode/Instruments, or iOS performance, load:
-
-- `AI Brain/Knowledge/Apple Platforms/INDEX.md`
-- `AI Brain/Knowledge/Apple Platforms/Actions/ACTION-REGISTER.md`
-- only the relevant topic pages under that domain.
-
-Treat that corpus as the current engineering reference: prefer primary-source-verified entries over recalled framework behavior, respect SHIPPING/BETA gates, and require a measurement plan for performance actions.
-
 ### 6. Start an activity session on this machine
 
 ```sh
