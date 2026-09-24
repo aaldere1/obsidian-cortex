@@ -1,14 +1,57 @@
 ---
 topic: Swift Evolution Watch
 category: swift
-status: PROPOSED
-verified: 2026-09-23
+status: active
+verified: 2026-09-24
 confidence: primary-source-verified
 ---
 
 # Swift Evolution Watch
 
-Track active proposals/pitches with practical relevance to Apple app engineering. Nothing on this page is shipping unless moved into a shipping topic page.
+Track active and recently accepted proposals with practical relevance to Apple app engineering. **Accepted does not mean shipping**: do not move an API into production guidance until its implementation/toolchain availability is verified for the targeted environment.
+
+## SE-0548 — resignRemoteID for remote distributed actor references
+Status: **ACCEPTED** on 2026-09-23; implementation/toolchain shipping status not yet promoted here.
+
+Purpose: add `DistributedActorSystem.resignRemoteID(_:)`, invoked when a remote distributed actor proxy is deinitialized. This closes the remote-reference lifecycle gap between `resolve(id:as:)` and deinitialization so custom actor systems can release connection/resource accounting when the last relevant remote reference disappears.
+
+Compatibility notes:
+- The new protocol requirement has a default implementation, preserving source/ABI compatibility for existing actor-system implementations.
+- The proposal states the emitted call is back-deployment-compatible; on older runtimes that do not support the requirement, the call is simply not made.
+- `resignRemoteID(_:)` may be called multiple times for the same actor ID when multiple remote references were created from repeated resolves.
+
+Agent guidance:
+- Do not assume the API is available in the currently shipping Swift 6.4 toolchain solely because the proposal is accepted.
+- For custom `DistributedActorSystem` implementations that retain resources per remote reference, re-check toolchain implementation availability before adopting.
+- Keep `resignID(_:)` handling for local actors separate from `resignRemoteID(_:)` handling for remote proxies.
+
+Sources:
+- https://github.com/swiftlang/swift-evolution/blob/main/proposals/0548-resign-remote-id.md
+- https://forums.swift.org/t/accepted-se-0548-resignremoteid-for-remote-distributed-actor-references/89703
+
+## SE-0553 — Task Identity
+Status: active review from 2026-09-23 through 2026-10-07.
+
+Purpose: expose a cheap, stable, process-unique identifier for Swift concurrency tasks through proposed APIs including `Task.currentID`, `Task.id`, `UnsafeCurrentTask.id`, and the opaque `Task.ID` / `TaskID` value type.
+
+The proposal is aimed primarily at always-on tracing, structured logging, profilers, custom executors, and other hot-path instrumentation where current `withUnsafeCurrentTask`-based identity workarounds can be too expensive or rely on unsupported pointer assumptions.
+
+Proposed semantic guarantees include:
+- process-unique for live tasks;
+- never reused within a process;
+- stable for the task lifetime;
+- not meaningful as a cross-process identity.
+
+Agent guidance:
+- Treat as PROPOSED only while review is active.
+- Do not replace production tracing/task-correlation code with `Task.currentID` until the proposal is accepted and the targeted toolchain/runtime availability is verified.
+- If it ships, prefer the opaque `Task.ID` for in-process identity and use `rawValue` only for explicit serialization/logging schemas.
+- Do not use task IDs as a substitute for distributed trace/span IDs across processes or hosts.
+- Re-profile before enabling per-event task tagging in a hot path; the proposal's benchmark envelope is not a universal application-performance guarantee.
+
+Sources:
+- https://github.com/swiftlang/swift-evolution/blob/main/proposals/0553-task-identity.md
+- https://forums.swift.org/t/se-0553-task-identity/89728
 
 ## SE-0551 — Span over a single value
 Status: active review from 2026-09-22 through 2026-10-06.
@@ -24,7 +67,7 @@ Agent guidance:
 
 Sources:
 - https://github.com/swiftlang/swift-evolution/blob/main/proposals/0551-span-of-one.md
-- https://forums.swift.org/t/se-0551/89715
+- https://forums.swift.org/t/se-0551-span-over-a-single-value/89715
 
 ## SE-0552 — Rounding of Float.pi
 Status: active review from 2026-09-22 through 2026-10-06.
@@ -73,7 +116,7 @@ Sources:
 - https://forums.swift.org/t/review-se-0549-package-manager-http-proxy-configuration/89513
 
 ## SE-0547 — SwiftPM Compilation Caching
-Status: proposal file still reports Active Review as of 2026-09-23; its stated review window ended 2026-09-01. No final acceptance/rejection announcement was verified in this pass.
+Status: proposal file still reports Active Review as of 2026-09-24; its stated review window ended 2026-09-01. No final acceptance/rejection announcement was verified in this pass.
 
 Purpose: expose Swift/Clang content-addressable compilation caching through SwiftPM for repeated local, worktree, and CI builds.
 
