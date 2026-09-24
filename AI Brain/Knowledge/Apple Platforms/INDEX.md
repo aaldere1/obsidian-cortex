@@ -1,7 +1,7 @@
 ---
 knowledge_domain: apple-platform-development
 status: active
-verified: 2026-09-23
+verified: 2026-09-24
 owners: [AI Brain]
 source_policy: primary-first
 ---
@@ -20,6 +20,11 @@ Canonical agent-facing knowledge for Swift, SwiftUI, Metal, SwiftUI shaders, Xco
 - iOS/iPadOS/macOS/tvOS/visionOS/watchOS 27.2 beta 2 shipped 2026-09-21.
 - Xcode 27.2 beta (27B5019j) is active, includes Swift 6.4 and 27.2 SDKs, but Apple directs Duo development to Xcode 27.1 beta.
 
+## Upcoming distribution gates
+
+- Starting April 2027, App Store Connect submissions for iOS/iPadOS, tvOS, visionOS, and watchOS must be built with the corresponding 27 SDK or later. This is an SDK/build-tool requirement, not a requirement to raise an app's deployment target to OS 27.
+- Auto-renewable subscription purchase-option configuration now includes multiseat settings in App Store Connect; Volume Purchasing launches 2026-10-22 and Group Purchases are planned for winter 2026.
+
 ## Agent rule
 
 Before implementing or diagnosing Apple-platform code:
@@ -32,6 +37,7 @@ Before implementing or diagnosing Apple-platform code:
 7. Profile before applying micro-optimizations.
 8. When using coding agents, preserve build/test/preview verification rather than trusting generated code without validation.
 9. For distribution automation, verify current App Store Connect API/submission requirements before changing CI or metadata.
+10. Treat accepted Swift Evolution proposals as non-shipping until implementation/toolchain availability is separately verified.
 
 ## Topic map
 
@@ -94,6 +100,7 @@ Before implementing or diagnosing Apple-platform code:
 - https://developer.apple.com/documentation/swiftui/shader
 - https://developer.apple.com/wwdc26/guides/metal/
 - https://developer.apple.com/app-store/whats-new/
+- https://developer.apple.com/app-store/subscriptions/bundles-and-suites/
 - https://developer.apple.com/documentation/backgroundassets
 - https://developer.apple.com/documentation/appstoreconnectapi/
 - https://developer.apple.com/app-store/user-privacy-and-data-use/
