@@ -4,6 +4,10 @@ Purpose: Current snapshot of the project. Keep this updated at session closeout.
 
 Last updated: {{DATE}}
 
+## Stop when
+
+- 
+
 ## Snapshot
 
 -

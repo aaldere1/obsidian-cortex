@@ -1,8 +1,6 @@
 # 🪨 START HERE — Onboard a Machine in ~5 Minutes
 
-> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
-
-You're setting up a new computer to join the private Obsidian brain. This public repository is a reference for the workflow.
+You're setting up a new computer to join your Obsidian Cortex brain (the shared vault your agents read on every machine).
 
 **The fast way:** don't run these steps by hand. Open your AI agent (Claude Code or Codex) **inside the cloned vault** and paste the prompt below — it'll do the whole setup for you. The manual steps are here as a fallback and so you understand what's happening.
 
@@ -14,7 +12,7 @@ You're setting up a new computer to join the private Obsidian brain. This public
 
    ```sh
    cd ~
-   git clone https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git Obsidian-Vault
+   git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
    cd Obsidian-Vault
    claude     # or: codex
    ```
@@ -58,10 +56,33 @@ Install with `brew install git node` (macOS) if missing. You also need clone acc
 ### 1. Clone
 ```sh
 cd ~
-git clone https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git Obsidian-Vault
+git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
 cd Obsidian-Vault
 ls "AI Brain"      # → Daily Machines Projects Shared docs scripts skills-claude-code templates
 ```
+
+### 1b. Make it yours — private repo + remove the template guard (first machine only)
+Your vault will hold personal memory, so it must live in a **private** repo:
+```sh
+git remote set-url origin git@github.com:<you>/<your-private-brain>.git   # an empty PRIVATE repo you created
+```
+Then open `.gitignore` and **delete the `TEMPLATE GUARD` block** (from its header to the end of
+the file). It exists only to keep live state out of the public template; left in place, it
+would stop `Machines/`, `Projects/`, `Shared/`, and `Daily/` from syncing.
+
+Create the shared memory files from the templates (replace `{{DATE}}` with today):
+```sh
+T="AI Brain/templates/shared"; S="AI Brain/Shared"
+cp "$T/profile.md" "$S/Profile.md";                 cp "$T/preferences.md" "$S/Preferences.md"
+cp "$T/active-projects.md" "$S/Active Projects.md"; cp "$T/decisions.md" "$S/Decisions.md"
+cp "$T/open-loops.md" "$S/Open Loops.md";           cp "$T/fleet-apply-queue.md" "$S/Fleet Apply Queue.md"
+```
+(`_EXAMPLE_Profile.md` / `_EXAMPLE_Preferences.md` show what filled-in versions look like.)
+Commit and push to your private repo:
+```sh
+git add -A && git commit -m "Make this my private brain" && git push -u origin main
+```
+Every later machine just clones your private repo and skips this step.
 
 ### 2. Pick a machine name
 Short, stable, never renamed. e.g. `Laptop`, `Studio`, `Mac-Mini`, `Win-Desktop`.
@@ -85,8 +106,9 @@ node "AI Brain/scripts/brain.mjs" snapshot   # should show <MACHINE> as ACTIVE
 node "AI Brain/scripts/brain.mjs" install-claude-skills
 node "AI Brain/scripts/brain.mjs" install-claude-hook
 ```
-- First command copies the 4 `brain-*` skills into `~/.claude/skills/`.
+- First command copies every canonical skill (`brain-*`, `marathon`, `friction-audit`) into `~/.claude/skills/`.
 - Second wires a SessionStart hook that auto-pulls the vault and re-installs updated skills every session — so you never manually re-sync again.
+- **Recommended:** also wire the automation hooks (auto-briefing, closeout guard, safety-net closeout) — one JSON snippet in [`AI Brain/scripts/hooks/README.md`](AI%20Brain/scripts/hooks/README.md).
 - **Start a fresh Claude Code session** for them to load.
 
 ### 6. Set up Codex (if you use it)

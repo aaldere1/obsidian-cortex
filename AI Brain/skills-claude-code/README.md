@@ -1,8 +1,6 @@
-# Claude Code Skills — Public Reference Copies
+# Claude Code Skills — Canonical Copies
 
-> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
-
-These are reference copies of four `brain-*` skills. Install and update the live copies from the verified private vault, which contains the current scripts and personal machine configuration.
+These are versioned copies of the skills Claude Code uses on every machine. They live here so a fresh `git clone` of the vault carries everything needed to set up Claude Code on a new machine — no external file transfer required.
 
 ## Skills
 
@@ -10,6 +8,8 @@ These are reference copies of four `brain-*` skills. Install and update the live
 - `brain-closeout/SKILL.md` — session end: draft summary + closeout + idle + ask about push
 - `brain-daily/SKILL.md` — end-of-day rollup into `AI Brain/Daily/`
 - `brain-bootstrap/SKILL.md` — first-contact setup for a new machine
+- `marathon/` — durable `tasks/marathon.md` tracker for long "don't stop until done" runs, plus a headless resume script (pairs with `scripts/hooks/marathon-stop-guard.sh`)
+- `friction-audit/` — retro across recent Claude Code sessions: mechanical scan, ranked friction, optional deep-read workflow, and concrete fixes
 
 ## Install on a new machine
 
@@ -21,7 +21,7 @@ node "AI Brain/scripts/brain.mjs" install-claude-skills
 node "AI Brain/scripts/brain.mjs" install-claude-hook
 ```
 
-The first command copies all four skill directories into `~/.claude/skills/`. The second wires a `SessionStart` hook into `~/.claude/settings.json` that auto-syncs future skill updates from the vault. Both are idempotent.
+The first command copies every skill directory (including `scripts/`) into `~/.claude/skills/`. The second wires a `SessionStart` hook into `~/.claude/settings.json` that auto-syncs future skill updates from the vault. Both are idempotent.
 
 To restore the canonical versions if a machine's local copies have drifted:
 
@@ -40,7 +40,7 @@ node "AI Brain/scripts/brain.mjs" install-claude-hook --force
 After `install-claude-hook`, every Claude Code session start on this machine runs `AI Brain/scripts/hooks/brain-skill-sync.sh`:
 
 1. Pulls the vault silently (`git pull --ff-only`)
-2. Diffs each canonical skill in `AI Brain/skills-claude-code/` against `~/.claude/skills/`
+2. Diffs each canonical skill directory in `AI Brain/skills-claude-code/` against `~/.claude/skills/` (every file, not just `SKILL.md`)
 3. If any differ, runs `install-claude-skills --force` automatically
 4. Prints `🧠 Brain skills updated…` only when an update was actually applied (silent otherwise)
 
@@ -48,10 +48,11 @@ This means: edit a skill in the vault on Laptop, push, and the next Claude Code 
 
 ## Keep in sync
 
-When you edit an installed skill, update its canonical copy in the private vault. Other machines install from that private copy.
+When you edit a skill (e.g., a `~/.claude/skills/brain-startup/SKILL.md` on Laptop), also update the canonical copy here in the vault. Otherwise other machines onboarding will install the outdated version.
 
-(A future improvement: a `brain.mjs sync-claude-skills` command that diffs the two locations and prompts which side wins. For now, copy by hand when you edit.)
+
+The other automation hooks (auto-briefing, closeout guard, safety-net closeout, marathon guard) are documented in [`../scripts/hooks/README.md`](../scripts/hooks/README.md).
 
 ## Why duplicate?
 
-Claude Code loads skills from `~/.claude/skills/`. The verified private vault is the source of truth copied into that runtime location; this public directory is documentation only.
+Claude Code looks for skills in `~/.claude/skills/`, not the vault. So the runtime location is `~/.claude/skills/`. The vault copy is the **source of truth** that gets copied into the runtime location. Same pattern as the Codex AGENTS snippet at `AI Brain/docs/codex-agents-snippet.md`.

@@ -3,12 +3,10 @@ name: brain-closeout
 description: Wrap up a session by writing a structured summary to the Obsidian AI Brain, updating project state, and marking this machine idle. Triggers when the user says "wrap up", "we're done", "let's commit", "let's push", "closeout", "end session", "done for today", or signals end of meaningful work. Captures what changed, what was decided, and what's next so the next session (on any machine) can pick up cleanly.
 ---
 
-**Private vault only.** This public skill is a reference. Before reading or writing brain state, resolve `BRAIN_VAULT` to the private `aaldere1/obsidian-personal` checkout and run `node "AI Brain/scripts/brain.mjs" --private-vault-path` from this public framework to verify its exact remote and private visibility. Run all brain commands in that verified private checkout. Stop if verification fails; never fall back to `obsidian-cortex`.
-
-
 # brain-closeout
 
 Writes a structured session summary to the Obsidian AI Brain, updates project state, and marks this machine idle.
+
 
 ## When to invoke
 
@@ -18,16 +16,68 @@ Writes a structured session summary to the Obsidian AI Brain, updates project st
 
 ## What to do
 
-### 0. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
+### 0a. Resolve the vault path (DO NOT assume `~/Obsidian-Vault`)
+
+The vault lives at a different path on each machine. Resolve it, never hardcode it:
+
+```sh
+VAULT="${BRAIN_VAULT:-}"
+if [ -z "$VAULT" ]; then
+  for c in "$HOME/Obsidian-Vault" "$HOME/obsidian-cortex" \
+           "$HOME/Obsidian/Personal" "$HOME/GitHub/obsidian-cortex"; do
+    [ -d "$c/AI Brain" ] && { VAULT="$c"; break; }
+  done
+fi
+echo "vault: ${VAULT:?could not find the vault — set BRAIN_VAULT}"
+```
+
+Every `cd "$VAULT"` below depends on this. Known paths in a real fleet have included
+`~/Obsidian-Vault`, `~/obsidian-cortex`, `~/GitHub/obsidian-cortex` and
+`~/Obsidian/Personal` — one per machine. Background: `AI Brain/docs/brain-skill-sync-path-bug.md`.
+
+
+### 0b. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
 
 **Every example in this skill uses `<MACHINE>` as a placeholder.** You MUST substitute your actual machine name. Do NOT copy `"Laptop"` or any literal name from this doc.
 
 ```sh
-cd "$BRAIN_VAULT"
+cd "$VAULT"
 node "AI Brain/scripts/brain.mjs" whoami
 ```
 
-Use the reported `canonical:` value. The stable AI Brain name may differ from `hostname`; aliases are defined in `AI Brain/Machines/aliases.json`. If you find yourself about to copy a literal machine name from an example, stop and use the resolved canonical value.
+Use the reported `canonical:` value, and **read anything `whoami` prints on stderr**. It emits a
+loud `warning: ambiguous machine identity` when `hostname` and `LocalHostName` resolve to
+different machine folders — if you see that, the machine name is genuinely uncertain and you
+should confirm before writing anything.
+
+Why this matters: on Old-Laptop, `os.hostname()` returned literally `Mac`, which is **Laptop's folder** —
+a different, live machine — because macOS `HostName` was unset and the name fell back to a
+DHCP-derived value. Before 2026-08-30 `whoami` reported `canonical: Mac` there, so following
+this step exactly would have written Old-Laptop's records into Laptop's. `brain.mjs` now prefers the alias
+hit on `LocalHostName` and warns on the collision, but the lesson stands: **if the name looks
+like another machine, stop and check `aliases.json`.**
+
+If you find yourself about to copy a literal machine name from an example, stop and use the
+resolved canonical value.
+
+### 0c. Pull BEFORE you write (not just before you push)
+
+```sh
+cd "$VAULT" && git pull --rebase
+```
+
+Compose the closeout against current state, not the state from when the session began. The
+project files you are about to edit — `Current State.md`, `Next Steps.md` — are written by every
+machine in the fleet, so a session that started hours ago is editing a stale base and its commit
+will collide on rebase at push time.
+
+*Evidence: Desktop hit this twice. 2026-08-20 — `CONFLICT (content): Merge conflict in AI Brain/
+Projects/Obsidian-AI-Brain/Current State.md / error: could not apply eda4d4ab… Desktop closeout`.
+2026-08-31 — the same two files came back `UU` mid-rebase because another machine had
+consolidated the project while the session was running.* Pulling here does not remove the race,
+but it narrows the window from the whole session to the closeout itself, and would have avoided
+both. If the pull brings changes that alter what you were going to write, re-read the project
+files before drafting — the state you remember may already be gone.
 
 ### 1. Draft the summary from the session itself
 
@@ -51,16 +101,26 @@ If you're unsure, run `git status` and `git log --oneline -10` in the project re
 ### 3. Run closeout
 
 ```sh
-cd "$BRAIN_VAULT"
+cd "$VAULT"
 node "AI Brain/scripts/brain.mjs" closeout "<Project Name>" "<Session title>" "<MACHINE>" \
+  --had-commits --had-edits [--had-pr] --duration-band short|medium|long \
+  --goal "<what this session set out to complete>" \
   --summary "<1–3 short bullets, newline-separated>" \
   --changes "<paths or areas touched>" \
   --decisions "<durable decisions, or 'None recorded'>" \
   --next "<specific next action>" \
-  --questions "<open questions, or 'None recorded'>"
+  --questions "<open questions, or 'None recorded'>" \
+  --refs "<useful references, or 'None'>"
 ```
 
 This writes `AI Brain/Projects/<Project>/Sessions/YYYY-MM-DD-HHMM-<slug>.md` AND appends to `AI Brain/Machines/<MACHINE>/Session Log.md`.
+
+The `--had-commits` / `--had-edits` / `--had-pr` / `--duration-band` flags feed the optional Jev
+closeout-richness gate (advisory, never blocks). Pass the ones that are true — the command does not
+infer them, so a closeout without them always reads as "not rich" (noul ≈ 0.03) even for a session
+that shipped two PRs (observed 2026-09-19).
+If a caller omits a field, the helper writes an explicit `Unknown — caller omitted ...` marker rather
+than a scaffold `TODO`; reconcile any such marker before committing or marking the activity idle.
 
 ### 4. Update durable project files if state changed
 
@@ -101,16 +161,30 @@ If the current local time is past 5pm AND no `AI Brain/Daily/<today>.md` exists 
 Standing preference (from `AI Brain/Shared/Preferences.md`): commit and push vault updates by default on closeout. Only pause if `git status` shows unfamiliar or unrelated changes.
 
 ```sh
-cd "$BRAIN_VAULT" && git status --short
+cd "$VAULT" && git status --short
 ```
 
 If everything in the status is from this session (closeout files + the vault paths you touched), commit and push without asking:
 
 ```sh
+git config --get user.email >/dev/null 2>&1 || { echo "No git identity configured on this machine — STOP. Do NOT supply one to get past this. Ask the user to run: git config --global user.email \"you@example.com\" && git config --global user.name \"Your Name\""; exit 1; }
 git add "AI Brain" "Synthesis" index.md log.md
 git commit -m "<MACHINE> closeout: <session title>"
 git push
 ```
+
+**Never fabricate a git identity to get past a stop.** Git refuses to commit when no
+`user.email` is configured — that refusal is a feature, and it is *not* the failure mode.
+The failure mode is an agent routing around it by supplying a placeholder inline, e.g.
+`git -c user.name="Old-Laptop handover" -c user.email="noreply@localhost" commit`. That is exactly
+what happened in the 2026-08-30 Old-Laptop decommission: it produced unattributable commits across
+22 repos and blocked Vercel builds on 12 projects. Such an identity can't be attributed on
+GitHub and won't pass author-gated deploys. Stop and ask the user instead — always.
+
+Note `user.useConfigOnly=true` hardens the *other* half of this (it disables git's own
+hostname/GECOS guessing, which can otherwise succeed silently on a machine whose hostname
+resolves to a dotted domain). It does **not** override an explicit `-c user.email=` or
+`GIT_AUTHOR_EMAIL`, so it cannot prevent the fabrication case above. Only this rule can.
 
 Use the `<MACHINE>` name you detected in Step 0, not the literal "Laptop".
 
@@ -122,3 +196,8 @@ Only `git add` the paths you actually touched. If `git status` shows changes you
 - Be **concise** — a session file is a few short bullets, not a transcript
 - Decisions go in `Decisions.md` (durable, with rationale), not in `Current State.md`
 - If you don't know the project name and can't infer it: ask the user before writing — wrong project routing pollutes memory
+
+
+## Graph tighten (2026-09-22)
+- Seat handoffs: Brain note path + “read the note — don’t trust my summary.”
+- Live projects/sessions: require `Stop when:`.

@@ -1,7 +1,5 @@
 # Automation Roadmap
 
-> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
-
 Purpose: Capture the future automation direction without building it into v0.
 
 The first version of AI Brain should stay manual and Markdown-first. Automation should be added only after the files prove useful by hand.
@@ -109,7 +107,14 @@ The helper now supports:
 node "AI Brain/scripts/brain.mjs" status
 node "AI Brain/scripts/brain.mjs" scan-repos "/path/with/projects"
 node "AI Brain/scripts/brain.mjs" install-agent-pointer "Project Name" "/path/to/repo" "Laptop"
-node "AI Brain/scripts/brain.mjs" closeout "Project Name" "Short title" "Laptop" --summary "What changed" --next "Next action"
+node "AI Brain/scripts/brain.mjs" closeout "Project Name" "Short title" "Laptop" \
+  --goal "What this session set out to complete" \
+  --summary "What changed and what was verified" \
+  --changes "Files, repos, or areas touched" \
+  --decisions "Important decisions, or None" \
+  --questions "Unresolved questions, or None" \
+  --next "Next concrete action, or None" \
+  --refs "Useful references, or None"
 ```
 
 This is the first safe automation layer:

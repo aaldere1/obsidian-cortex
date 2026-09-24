@@ -1,8 +1,6 @@
 # Set Up The Brain On Another Computer
 
-> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
-
-Goal: bring a new machine to full parity with Laptop in under 10 minutes. After this, any Claude Code or Codex session on the new machine will read from and write to the same private brain vault as every other machine.
+Goal: bring a new machine to full parity with Laptop in under 10 minutes. After this, any Claude Code or Codex session on the new machine will read from and write to the same `obsidian-cortex` vault as every other machine.
 
 This is the **one-shot onboarding**. Follow top to bottom. Estimated time: 5–10 minutes.
 
@@ -12,7 +10,7 @@ This is the **one-shot onboarding**. Follow top to bottom. Estimated time: 5–1
 
 The new machine needs:
 
-- `git` configured with access to `https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO` (https + a token, or SSH key)
+- `git` configured with access to `https://github.com/YOUR-USERNAME/obsidian-cortex` (https + a token, or SSH key)
 - `node` (any LTS or current — verified with v22+, v25)
 - Optional but recommended: Obsidian app installed
 - Optional but recommended: Claude Code installed (`claude`) and/or Codex CLI installed
@@ -25,7 +23,7 @@ Pick a stable path (suggested: `~/Obsidian-Vault`). All examples below assume th
 
 ```sh
 cd ~
-git clone https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git Obsidian-Vault
+git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
 cd Obsidian-Vault
 ```
 

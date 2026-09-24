@@ -24,7 +24,10 @@ credentials.*
 # Node
 node_modules/
 
-# Public framework: prevent accidental staging of live brain state.
+# --- TEMPLATE GUARD — DELETE THIS BLOCK IN YOUR PRIVATE VAULT -----------------
+# Keeps live brain state out of the public obsidian-cortex template. In your own
+# private copy it would stop your memory from syncing, so START-HERE step 1 has
+# you delete everything from this line to the end of the file.
 /AI Brain/Knowledge/
 /AI Brain/Synthesis/
 /AI Brain/Machines/*

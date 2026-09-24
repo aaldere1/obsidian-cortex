@@ -3,12 +3,10 @@ name: brain-startup
 description: Brief the agent on the current state of the Obsidian AI Brain at the start of meaningful work. Reads cross-machine snapshot, shared memory, this machine's context, and relevant project memory; creates a per-session activity record so concurrent tasks remain visible. Use when starting work on a project, when the user says "start a session", "starting a session", "begin session", "kick off", "let's get started", "what was I doing", "where did I leave off", "catch me up", "what's the current state", "what's the state of X", or at the beginning of any non-trivial session where you'd benefit from knowing prior decisions and context.
 ---
 
-**Private vault only.** This public skill is a reference. Before reading or writing brain state, resolve `BRAIN_VAULT` to the private `aaldere1/obsidian-personal` checkout and run `node "AI Brain/scripts/brain.mjs" --private-vault-path` from this public framework to verify its exact remote and private visibility. Run all brain commands in that verified private checkout. Stop if verification fails; never fall back to `obsidian-cortex`.
-
-
 # brain-startup
 
 Reads the Obsidian AI Brain at the start of a session and creates an independent activity record so other machines see every in-flight task.
+
 
 ## When to invoke
 
@@ -19,14 +17,34 @@ Reads the Obsidian AI Brain at the start of a session and creates an independent
 
 ## What to do
 
-### 0. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
+### 0a. Resolve the vault path (DO NOT assume `~/Obsidian-Vault`)
+
+The vault lives at a different path on each machine. Resolve it, never hardcode it:
+
+```sh
+VAULT="${BRAIN_VAULT:-}"
+if [ -z "$VAULT" ]; then
+  for c in "$HOME/Obsidian-Vault" "$HOME/obsidian-cortex" \
+           "$HOME/Obsidian/Personal" "$HOME/GitHub/obsidian-cortex"; do
+    [ -d "$c/AI Brain" ] && { VAULT="$c"; break; }
+  done
+fi
+echo "vault: ${VAULT:?could not find the vault — set BRAIN_VAULT}"
+```
+
+Every `cd "$VAULT"` below depends on this. Known paths in a real fleet have included
+`~/Obsidian-Vault`, `~/obsidian-cortex`, `~/GitHub/obsidian-cortex` and
+`~/Obsidian/Personal` — one per machine. Background: `AI Brain/docs/brain-skill-sync-path-bug.md`.
+
+
+### 0b. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
 
 **Every example in this skill uses `<MACHINE>` as a placeholder.** You MUST substitute your actual machine name. Do NOT copy `"Laptop"` or any literal name from this doc — that's just the example machine.
 
 Resolve the network hostname or alias to the canonical AI Brain folder:
 
 ```sh
-cd "$BRAIN_VAULT"
+cd "$VAULT"
 node "AI Brain/scripts/brain.mjs" whoami
 ```
 
@@ -37,7 +55,7 @@ Use the reported `canonical:` value. The stable AI Brain name may differ from `h
 ### 1. Pull latest vault state
 
 ```sh
-cd "$BRAIN_VAULT"
+cd "$VAULT"
 git pull --ff-only
 ```
 
@@ -80,7 +98,7 @@ echo "python=$(python3 --version 2>&1 || echo 'not installed')"
 echo "git=$(git --version | awk '{print $3}')"
 ```
 
-Use the output to populate the `## Machine`, `## Vault Location`, and `## Tools Installed` sections. Vault path is `~/Obsidian-Vault` (resolve `~` to the actual home dir). Set `Last updated:` to today's date. Use the Edit tool — don't overwrite the whole file, just replace the empty bullets.
+Use the output to populate the `## Machine`, `## Vault Location`, and `## Tools Installed` sections. Vault path is `"$VAULT"` (resolve `~` to the actual home dir). Set `Last updated:` to today's date. Use the Edit tool — don't overwrite the whole file, just replace the empty bullets.
 
 **Current Context.md** — write a minimal honest placeholder; don't fabricate context:
 
@@ -139,7 +157,7 @@ Do not dump the raw memory at the user. Summarize.
 If the work session is going to be substantial, push so other machines see it:
 
 ```sh
-cd "$BRAIN_VAULT" && git add "AI Brain/Machines/<MACHINE>/Activities/<SESSION_ID>.md" "AI Brain/Machines/<MACHINE>/Current Activity.md" && git commit -m "<MACHINE> startup: <focus>" && git push
+cd "$VAULT" && git add "AI Brain/Machines/<MACHINE>/Activities/<SESSION_ID>.md" "AI Brain/Machines/<MACHINE>/Current Activity.md" && git commit -m "<MACHINE> startup: <focus>" && git push
 ```
 
 For quick sessions, skip the push — the closeout will carry the activity with the session file.
@@ -149,3 +167,12 @@ For quick sessions, skip the push — the closeout will carry the activity with 
 - Never store secrets, credentials, or full chat transcripts
 - Read **only what's relevant** — do not bulk-load session history unless the user asks
 - If you're already mid-session and the user invokes this, do the snapshot + brief but do not create a second activity file for the same task
+
+
+## Graph tighten (2026-09-22)
+- Seat handoffs: Brain note path + “read the note — don’t trust my summary.”
+- Live projects/sessions: require `Stop when:`.
+
+## Fleet Apply Queue (2026-09-22)
+
+After pull, read `AI Brain/Shared/Fleet Apply Queue.md`. Apply any Open items that affect this machine (habits, template awareness, locks). Mark **Applied on** with this machine name + date, then push. If this session produced a fleet-useful learning, add an Open item (or Shared lock + link) and push — don’t leave it chat-only.

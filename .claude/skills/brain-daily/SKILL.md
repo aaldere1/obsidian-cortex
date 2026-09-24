@@ -3,12 +3,10 @@ name: brain-daily
 description: Generate the end-of-day rollup of everything that happened across all machines and projects — sessions, decisions, wiki edits, open loops. Writes AI Brain/Daily/YYYY-MM-DD.md. Triggers when the user says "daily summary", "what did I do today", "end of day", "wrap up the day", "daily rollup", or any end-of-day review request. Can also be invoked from a cron schedule.
 ---
 
-**Private vault only.** This public skill is a reference. Before reading or writing brain state, resolve `BRAIN_VAULT` to the private `aaldere1/obsidian-personal` checkout and run `node "AI Brain/scripts/brain.mjs" --private-vault-path` from this public framework to verify its exact remote and private visibility. Run all brain commands in that verified private checkout. Stop if verification fails; never fall back to `obsidian-cortex`.
-
-
 # brain-daily
 
 End-of-day rollup. Reads today's session files, machine session logs, and vault log; writes a single daily summary file.
+
 
 ## When to invoke
 
@@ -18,21 +16,54 @@ End-of-day rollup. Reads today's session files, machine session logs, and vault 
 
 ## What to do
 
-### 0. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
+### 0a. Resolve the vault path (DO NOT assume `~/Obsidian-Vault`)
+
+The vault lives at a different path on each machine. Resolve it, never hardcode it:
+
+```sh
+VAULT="${BRAIN_VAULT:-}"
+if [ -z "$VAULT" ]; then
+  for c in "$HOME/Obsidian-Vault" "$HOME/obsidian-cortex" \
+           "$HOME/Obsidian/Personal" "$HOME/GitHub/obsidian-cortex"; do
+    [ -d "$c/AI Brain" ] && { VAULT="$c"; break; }
+  done
+fi
+echo "vault: ${VAULT:?could not find the vault — set BRAIN_VAULT}"
+```
+
+Every `cd "$VAULT"` below depends on this. Known paths in a real fleet have included
+`~/Obsidian-Vault`, `~/obsidian-cortex`, `~/GitHub/obsidian-cortex` and
+`~/Obsidian/Personal` — one per machine. Background: `AI Brain/docs/brain-skill-sync-path-bug.md`.
+
+
+### 0b. Resolve THIS machine's stable name (CRITICAL — DO NOT SKIP)
 
 **Every example in this skill uses `<MACHINE>` as a placeholder.** You MUST substitute your actual machine name. Do NOT copy `"Laptop"` or any literal name from this doc.
 
 ```sh
-cd "$BRAIN_VAULT"
+cd "$VAULT"
 node "AI Brain/scripts/brain.mjs" whoami
 ```
 
-Use the reported `canonical:` value. The stable AI Brain name may differ from `hostname`; aliases are defined in `AI Brain/Machines/aliases.json`. If you find yourself about to copy a literal machine name from an example, stop and use the resolved canonical value.
+Use the reported `canonical:` value, and **read anything `whoami` prints on stderr**. It emits a
+loud `warning: ambiguous machine identity` when `hostname` and `LocalHostName` resolve to
+different machine folders — if you see that, the machine name is genuinely uncertain and you
+should confirm before writing anything.
+
+Why this matters: on Old-Laptop, `os.hostname()` returned literally `Mac`, which is **Laptop's folder** —
+a different, live machine — because macOS `HostName` was unset and the name fell back to a
+DHCP-derived value. Before 2026-08-30 `whoami` reported `canonical: Mac` there, so following
+this step exactly would have written Old-Laptop's records into Laptop's. `brain.mjs` now prefers the alias
+hit on `LocalHostName` and warns on the collision, but the lesson stands: **if the name looks
+like another machine, stop and check `aliases.json`.**
+
+If you find yourself about to copy a literal machine name from an example, stop and use the
+resolved canonical value.
 
 ### 1. Run the daily command
 
 ```sh
-cd "$BRAIN_VAULT"
+cd "$VAULT"
 node "AI Brain/scripts/brain.mjs" daily "<MACHINE>"
 ```
 
@@ -40,18 +71,20 @@ This auto-aggregates:
 
 - All `AI Brain/Projects/*/Sessions/YYYY-MM-DD-*.md` files dated today
 - All today's entries from vault `log.md`
-- Writes `AI Brain/Daily/YYYY-MM-DD.md` with sections: Sessions, Projects, Wiki events, Decisions (placeholder), Open Loops (placeholder), Notes for tomorrow (placeholder)
+- Writes `AI Brain/Daily/YYYY-MM-DD.md` with sections for sessions, projects, wiki events, decisions, open questions, and next steps synthesized from today's closeouts
 - Appends a `daily | ...` entry to `log.md`
 
-### 2. Enrich the placeholder sections
+### 2. Verify the synthesized sections
 
-The auto-generated file leaves three sections for you to fill:
+The generator extracts three sections from today's session closeouts:
 
-- **Decisions made** — read the linked session files, extract durable decisions, write 1–3 bullets
-- **Open loops added or resolved** — diff `AI Brain/Shared/Open Loops.md` against yesterday (or just summarize current open vs. resolved), write 1–3 bullets
-- **Notes for tomorrow** — read each project's `Next Steps.md`, pull the top "Now" items, write a short, prioritized list
+- **Decisions made** — durable decisions recorded by today's sessions
+- **Open loops added or resolved** — open questions recorded by today's sessions
+- **Notes for tomorrow** — next steps recorded by today's sessions
 
-Be concise. The daily summary is a TL;DR of the day, not a transcript.
+Read the generated Markdown before committing. Correct any stale or misleading source entry, add a
+cross-project open-loop change that was recorded only in `Shared/Open Loops.md`, and confirm no
+`TODO`, `TBD`, or generated instruction remains. Be concise; the daily summary is a TL;DR, not a transcript.
 
 ### 3. Brief the user
 
@@ -66,7 +99,7 @@ In 3–6 lines:
 If the user agrees:
 
 ```sh
-cd "$BRAIN_VAULT" && git add "AI Brain/Daily" log.md && git commit -m "Daily summary $(date +%Y-%m-%d)" && git push
+cd "$VAULT" && git add "AI Brain/Daily" log.md && git commit -m "Daily summary $(date +%Y-%m-%d)" && git push
 ```
 
 ## Edge cases
@@ -80,3 +113,7 @@ cd "$BRAIN_VAULT" && git add "AI Brain/Daily" log.md && git commit -m "Daily sum
 - Never store secrets, credentials, or chat transcripts
 - Daily files are TL;DRs, not archives — the session files under `Projects/*/Sessions/` are the source of truth
 - If the user wants weekly or monthly rollups later, that's a separate enhancement — `brain-daily` only does single days
+
+
+## Fleet Apply Queue (2026-09-22)
+Pull SoT, read `Shared/Fleet Apply Queue.md`, apply open items, mark machine + date, push. Write fleet learnings back the same way.
