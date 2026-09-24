@@ -3,8 +3,6 @@
   <img src="assets/hero.jpg" alt="Obsidian Cortex" width="100%" />
 </p>
 
-> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
-
 <h1 align="center">🪨 Obsidian Cortex</h1>
 
 <p align="center">
@@ -85,13 +83,18 @@ You re-explain your stack. Your preferences. What you were doing yesterday. What
 
 > **Requirements:** [Obsidian](https://obsidian.md) + [Obsidian Git plugin](https://github.com/Vinzent03/obsidian-git) (for real-time multi-machine sync) · Git · Node 18+
 
-Don't run setup by hand. Clone your **private brain** as the vault, open your AI agent inside it, and hand it the goal:
+Don't run setup by hand. Clone the vault, open your AI agent **inside it**, and hand it the goal:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git Obsidian-Vault
+git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
 cd Obsidian-Vault
 claude        # or: codex
 ```
+
+> 🔒 **Make your copy private.** Your vault will hold your projects, decisions, and machine notes.
+> Create a **private** repo (GitHub → *New repository* → Private), then point this clone at it:
+> `git remote set-url origin git@github.com:YOU/your-private-brain.git && git push -u origin main`.
+> Pull framework updates later with `git pull https://github.com/YOUR-USERNAME/obsidian-cortex.git main`.
 
 Then paste:
 
@@ -127,6 +130,8 @@ Obsidian Cortex ships with **agent skills** wired as **slash commands** — the 
 | **`/brain-closeout`** | done / "push it" | 🏁 writes a session summary, updates project state, marks the machine idle |
 | **`/brain-daily`** | end of day | 📅 rolls up the day's sessions into `Daily/` |
 | **`/brain-bootstrap`** | new machine | 🤖 sets the machine up from scratch |
+| **`/marathon`** | a long "don't stop until done" run | 🏃 keeps a resumable `tasks/marathon.md` tracker; a Stop hook keeps the agent going until every item is checked |
+| **`/friction-audit`** | weekly / after a rough stretch | 🔍 mines your recent sessions for corrections, interrupts, and error loops, and proposes the skill, hook, or rule that fixes each one |
 
 ```text
 You:   /brain-closeout
@@ -156,6 +161,34 @@ node "AI Brain/scripts/brain.mjs" reap "Laptop" # clear ghost sessions after a c
 
 ---
 
+## 🤖 Or don't even type the commands — *hooks run the brain for you*
+
+Slash commands are reliable, but people forget them. Wire the included Claude Code hooks and the protocol runs itself:
+
+| Hook | What happens, automatically |
+|---|---|
+| 🌅 **Session start** | Vault pulled, ghost sessions reaped, and a one-line digest injected: who's active on other machines, open loops, tracked projects. |
+| 🔄 **Session start** | Any skill that changed in the vault is re-installed — edit once, every machine updates. |
+| 🛑 **Stop** | Shipped a commit or PR but wrote no closeout? The agent is stopped **once** and told to run `/brain-closeout`. |
+| 🧯 **Session end** | Real work but still no closeout? A git-derived safety-net note is written and pushed, so nothing is silently lost. |
+
+All hooks are fail-open — they can never block or slow a session. Setup is one JSON snippet: [`AI Brain/scripts/hooks/README.md`](AI%20Brain/scripts/hooks/README.md).
+
+<details>
+<summary>🧩 More built-in workflow</summary>
+
+- **Machine identity you can trust** — `whoami` resolves this machine from the stable `LocalHostName` + `Machines/aliases.json` and shouts on stderr if hostname and alias disagree, so one machine never writes into another's folder.
+- **Pull before you write** — closeout rebases onto the latest vault before drafting, so machines editing the same project don't collide.
+- **Honest closeouts** — every field is required; an omitted one is written as an explicit `Unknown — caller omitted …` marker, never a silent `TODO`.
+- **Daily rollups that mean something** — `/brain-daily` extracts the day's decisions, open loops, and next steps from every session closeout.
+- **Fleet Apply Queue** — a shared `Shared/Fleet Apply Queue.md` (template in `templates/shared/`) for learnings every machine should *apply*, not just read. Each machine marks when it has.
+- **`Stop when:` on live work** — project state, open loops, and session notes carry an explicit done condition; agent handoffs point at the note instead of paraphrasing it.
+- **Optional Jev gates** — with a [TypeSafe](https://docs.typesafe.ai) key, startup can confirm the project from abstracted folder names and closeout gets an advisory "was this worth a full note?" score. Off by default, fail-open, and nothing but abstracted signals ever leaves the machine. See [`typesafe-jev-gates.md`](AI%20Brain/docs/typesafe-jev-gates.md).
+
+</details>
+
+---
+
 ## 🗂️ What's inside
 
 ```text
@@ -168,14 +201,16 @@ AI Brain/
 │       └── Session Log.md       Short index of meaningful sessions
 ├── 📦 Projects/          Per-project memory (overview · state · decisions · next steps)
 ├── 📅 Daily/             Auto-rolled daily summaries
-├── 🤖 skills-claude-code/  Agent skills — teach the AI to run the protocol on its own
-├── 🧩 templates/         The blueprints brain.mjs stamps out
-├── 📖 docs/              Setup + workflow guides (Codex, Claude Code, cron)
+├── 🤖 skills-claude-code/  Agent skills — brain-* protocol + marathon + friction-audit
+├── 🧩 templates/         The blueprints brain.mjs stamps out (incl. Fleet Apply Queue)
+├── 📖 docs/              Setup + workflow guides (Codex, Claude Code, Cursor, cron, Jev)
 └── ⚙️  scripts/
-    └── brain.mjs         The whole engine — pure Node stdlib, zero deps
+    ├── brain.mjs         The whole engine — pure Node stdlib, zero deps
+    ├── jev-gates.mjs     Optional TypeSafe gates (off unless you add a key) + tests
+    └── hooks/            Claude Code hooks that run the protocol automatically
 
 .claude/
-├── skills/              Auto-installed brain-* skills for Claude Code
+├── skills/              Auto-installed skills for Claude Code
 └── commands/            /brain-startup · /brain-closeout · /brain-daily slash commands
 ```
 
@@ -209,7 +244,9 @@ AI Brain/
 </tr>
 </table>
 
-> `brain.mjs` is built around this rule and reminds agents of it. A `.gitignore` guards common secret files too. **You're still responsible for what you commit** — treat the vault as public-safe by default.
+> `brain.mjs` is built around this rule and reminds agents of it. A `.gitignore` guards common secret files too. **Keep your vault in a private repo** and still treat it as if it could leak — you're responsible for what you commit.
+>
+> The `.gitignore` in *this* template also blocks live brain state (`Machines/*`, `Projects/*`, `Shared/*`, `Daily/*`, …) so nothing personal lands in the public framework by accident. In **your private copy**, delete that last block so your memory actually syncs.
 
 ---
 
@@ -227,7 +264,7 @@ AI Brain/
 
 ## 🛠️ Multi-machine sync
 
-Each machine clones the same private brain repo. Agents `git pull` on session start and `git push` on closeout — but for **real-time** background sync (so your desktop sees your laptop's changes seconds later, without an agent running), use the Obsidian Git plugin.
+Each machine clones the same vault repo. Agents `git pull` on session start and `git push` on closeout — but for **real-time** background sync (so your desktop sees your laptop's changes seconds later, without an agent running), use the Obsidian Git plugin.
 
 ### 🔌 Required for multi-machine: the Obsidian Git plugin
 

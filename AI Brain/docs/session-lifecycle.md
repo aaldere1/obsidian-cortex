@@ -1,7 +1,5 @@
 # AI Brain: How Session Startup & Closeout Work
 
-> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
-
 A short guide to the two moments that bookend every meaningful work session with the
 AI Brain: **startup** (loading context before we begin) and **closeout** (saving what
 happened when we finish). This is the mechanism that lets an AI agent pick up on any
@@ -63,7 +61,7 @@ seen.)
 **What the agent does, in order:**
 
 1. **Figure out which machine it's on.** Each machine has a stable name in the vault
-   (e.g. `Laptop`, `Desktop`). The agent resolves it with `brain.mjs whoami` — never guessing —
+   (e.g. `Laptop`, `Studio`). The agent resolves it with `brain.mjs whoami` — never guessing —
    because writing to the wrong machine's folder corrupts another machine's record.
 
 2. **Pull the latest vault** (`git pull --ff-only`) so it's working from current state.
@@ -153,9 +151,10 @@ lifecycle uses:
 | `snapshot` | Show who's `ACTIVE`/`idle` across all machines |
 | `startup <machine> --agent --project --focus` | Register a live activity session, returns a `session_id` |
 | `activity <machine> --session <id> --focus` | Update a running session's focus (heartbeat) |
-| `closeout <project> <title> <machine> --summary --next ...` | Write the session file + append to the machine's log |
+| `closeout <project> <title> <machine> --goal --summary --changes --decisions --questions --next --refs ...` | Write the complete session file + append to the machine's log |
 | `idle <machine> --session <id>` | Mark this session finished |
 | `reap <machine> [--hours 48]` | Clean up "ghost" sessions that never closed out |
+| `jev-status` / `judge-project` / `judge-closeout` / `judge-scrub` | Optional TypeSafe Jev gates (off unless a key or `--use-jev` / `BRAIN_JEV=1`) |
 
 And the vault layout it reads and writes:
 
@@ -174,6 +173,21 @@ AI Brain/
 
 ---
 
+## 5b. Optional Jev gates
+
+Startup can refine a cwd/repo project guess with a TypeSafe **Choice**, and
+closeout can ask a **Noul** whether the session looks rich enough for a full
+note. Both are fail-open: no key, low confidence, or API error leaves today's
+behavior unchanged and never blocks closeout.
+
+Public cortex sync can add a personal-only **Noul**. That gate is fail-safe when
+it runs (unsure → do not publish) and is skipped entirely when Jev is off.
+
+Enablement, env (`TYPESAFE_API_KEY`), and smoke notes:
+[typesafe-jev-gates.md](./typesafe-jev-gates.md).
+
+---
+
 ## 6. What it will and won't store
 
 - ✅ Preferences, project state, decisions + rationale, next steps, short session summaries,
@@ -189,3 +203,27 @@ AI Brain/
 > announce "I'm working on X." **Closeout** = write down what changed / was decided / is next,
 > mark myself done, push it back. In between, do the work. Because it all lives in a git-synced
 > vault, the *next* session on *any* machine starts already caught up.
+
+---
+
+## Cursor as a third seat (2026-09-24)
+
+Codex and Claude Code already run this lifecycle. **Cursor IDE** is a third seat that
+mostly *reads* the same trail so CLI work is recognizable in the IDE.
+
+- On `startup` / `closeout`, set `--agent` to exactly one of: `Codex`, `Claude Code`, `Cursor`
+- Prefer `--changes` (paths) and `--refs` (branch / PR / SHA) so an IDE agent can ground itself without chat history
+- Do **not** dump transcripts into Brain or invent a Cursor-only memory tree
+- Cursor still follows the startup collision checks
+
+## Seat handoffs & Stop when (2026-09-22)
+
+**Handoff:** When waking another seat, pass the Brain note path / Open Loop id and say to read the note — do not treat a paraphrased brief as SoT.
+
+**Stop when:** Active project index rows, project `Current State.md`, and session notes include an explicit `Stop when:` done condition before spinning more seats or continuing a loop.
+
+**Edges:** Open Loops do not auto-wake seats; a human (or one coordinating agent) decides who picks work up.
+
+
+## Fleet Apply Queue (2026-09-22)
+Pull SoT, read `Shared/Fleet Apply Queue.md`, apply open items, mark machine + date, push. Write fleet learnings back the same way.

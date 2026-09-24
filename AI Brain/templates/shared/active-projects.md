@@ -13,3 +13,5 @@ Last updated: {{DATE}}
 - Memory folder: `AI Brain/Projects/{{PROJECT_NAME}}/`
 - Current priority:
 - Next action:
+- **Stop when:**
+- Owner seat (if any):

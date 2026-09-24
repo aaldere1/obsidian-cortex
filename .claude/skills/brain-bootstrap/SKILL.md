@@ -3,12 +3,10 @@ name: brain-bootstrap
 description: Set up this machine and this agent to participate in the Obsidian-Vault brain — clone vault if needed, register the machine, install agent-flavor configuration, write Current Activity, verify. Use when the user says "bootstrap this machine", "set up the brain on this machine", "onboard this agent", "this is a new machine — set it up", "install the brain on this computer", "make this machine part of the brain", or any first-time brain installation request. ONE-SHOT setup, autonomous after the human answers vault path and machine name.
 ---
 
-**Private vault only.** This public skill is a reference. Before reading or writing brain state, resolve `BRAIN_VAULT` to the private `aaldere1/obsidian-personal` checkout and run `node "AI Brain/scripts/brain.mjs" --private-vault-path` from this public framework to verify its exact remote and private visibility. Run all brain commands in that verified private checkout. Stop if verification fails; never fall back to `obsidian-cortex`.
-
-
 # brain-bootstrap
 
 One-shot bootstrap for getting a new machine + agent fully participating in the Obsidian-Vault brain.
+
 
 ## When to invoke
 
@@ -18,11 +16,36 @@ One-shot bootstrap for getting a new machine + agent fully participating in the 
 
 ## What to do
 
-The full runbook is in the vault at `$BRAIN_VAULT/AGENT-BOOTSTRAP.md`. Read it once, execute it top-to-bottom.
+### 0. Resolve the vault path — or choose one (DO NOT assume `~/Obsidian-Vault`)
+
+Bootstrap may run *before* this machine has a vault. First check whether one already exists;
+only clone if not. Either way, never hardcode the path:
+
+```sh
+VAULT="${BRAIN_VAULT:-}"
+if [ -z "$VAULT" ]; then
+  for c in "$HOME/Obsidian-Vault" "$HOME/obsidian-cortex" \
+           "$HOME/Obsidian/Personal" "$HOME/GitHub/obsidian-cortex"; do
+    [ -d "$c/AI Brain" ] && { VAULT="$c"; break; }
+  done
+fi
+echo "vault: ${VAULT:-NONE — needs cloning}"
+```
+
+If it printed `NONE`, ask the human where to clone it (suggest `~/Obsidian-Vault`, which is
+what the docs' examples use), clone there, and set `VAULT` to that path. Then **record the real
+path** in this machine's `Local Setup.md` — a machine with no recorded path is one whose hook
+status nobody can check.
+
+Every `cd "$VAULT"` below depends on this. Known paths in a real fleet have included
+`~/Obsidian-Vault`, `~/obsidian-cortex`, `~/GitHub/obsidian-cortex` and
+`~/Obsidian/Personal` — one per machine. Background: `AI Brain/docs/brain-skill-sync-path-bug.md`.
+
+The full runbook is in the vault at `"$VAULT/AGENT-BOOTSTRAP.md"`. Read it once, execute it top-to-bottom.
 
 Quick orientation:
 
-1. **Read the runbook first**: `Read "$BRAIN_VAULT/AGENT-BOOTSTRAP.md"` (or the equivalent path on this machine — if vault isn't cloned yet, you'll have to read this from somewhere else first; in that case, ask the human to paste the runbook content or point you at the GitHub URL: https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO/blob/main/AGENT-BOOTSTRAP.md)
+1. **Read the runbook first**: `Read "$VAULT/AGENT-BOOTSTRAP.md"` (or the equivalent path on this machine — if vault isn't cloned yet, you'll have to read this from somewhere else first; in that case, ask the human to paste the runbook content or point you at the GitHub URL: https://github.com/YOUR-USERNAME/obsidian-cortex/blob/main/AGENT-BOOTSTRAP.md)
 2. **Run the four self-check detections** at the top of the runbook
 3. **Decide which branches apply** using the decision table
 4. **Pause and ask the human exactly once** for: vault path (if not at default), machine name. After those answers, proceed autonomously through the chosen branches.

@@ -1,16 +1,21 @@
-# Public framework boundary
+# Agent instructions
 
-This repository is a public, reusable AI Brain framework. Keep its contents generic.
-Do not store personal knowledge corpora, research-run records, project memory,
-or user-specific agent wiring here. The presence of an `AI Brain/` folder does
-not make this repository a private vault.
+## Is this the public template or a private vault?
 
-Before writing private brain content, resolve the user-authorized private vault
-and verify its exact repository identity and current private visibility with
-authenticated GitHub metadata. If that destination cannot be verified, stop
-without writing; never fall back to this public repository.
+Check before writing any brain state (machine records, project memory, session notes,
+daily summaries, shared files):
 
-For this owner, the only authorized destination is private
-`aaldere1/obsidian-personal`. The public `brain.mjs` and skill hook are guarded
-launchers into that vault, not local writers. Run all startup, closeout, daily,
-agent installation, and Git sync work from the verified private checkout.
+```sh
+git remote get-url origin
+gh repo view --json visibility -q .visibility   # if gh is available
+```
+
+- **Public `obsidian-cortex` template** (or any repository that is not private): this is the
+  reusable framework, not a vault. Change only framework files — engine, skills, hooks,
+  templates, docs. Never write personal memory, research corpora, or user-specific agent
+  wiring here, and never fall back to this checkout when the real vault can't be found.
+- **The user's private vault** (a private copy made per `START-HERE.md` step 1b): this is the
+  brain. Follow the lifecycle in `AI Brain/docs/session-lifecycle.md` —
+  `brain.mjs whoami`, `startup`, `closeout`, `idle`.
+
+If you can't tell which one you are in, stop and ask before writing.
