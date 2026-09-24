@@ -1,6 +1,6 @@
 ---
 status: active
-verified: 2026-09-23
+verified: 2026-09-24
 ---
 
 # Apple Platform Engineering Action Register
@@ -99,7 +99,7 @@ These are candidate actions for app-development agents. They are not automatical
 ## APPLE-012 — Prepare adaptive primary/secondary layout for Duo
 - Status: blocked
 - Priority: P2
-- Deployment gate: iOS 27.1 / Xcode 27.1; currently beta 2026-09-23
+- Deployment gate: iOS 27.1 / Xcode 27.1; currently beta 2026-09-24
 - Trigger: app has a meaningful player/detail + secondary-list layout or targets iPhone Duo
 - Action: prototype ArrangementView and reserved regions on a beta branch.
 - Acceptance: no production dependency before API/SDK gate is approved.
@@ -108,7 +108,7 @@ These are candidate actions for app-development agents. They are not automatical
 ## APPLE-013 — Evaluate the new SwiftUI Document architecture
 - Status: blocked
 - Priority: P1
-- Deployment gate: API is currently documented as Beta as of 2026-09-23
+- Deployment gate: API is currently documented as Beta as of 2026-09-24
 - Trigger: document-based app, editor, creative tool, or package format with expensive reads/writes
 - Action: prototype ReadableDocument/WritableDocument + DocumentReader/DocumentWriter; keep snapshot/apply lightweight on Main Actor; move serialization and disk I/O to the provided background path; use previous snapshots for incremental writes.
 - Acceptance: beta branch demonstrates lower main-thread I/O cost and correct autosave/undo behavior, with no production dependency until API status is cleared.
@@ -184,4 +184,28 @@ These are candidate actions for app-development agents. They are not automatical
 - Acceptance: metadata matches actual product behavior; required age-range checks are implemented where applicable; submission succeeds without avoidable age-rating/social-media metadata defects.
 - Performance verification: not applicable; verify policy/metadata/runtime gating behavior.
 - Sources: https://developer.apple.com/app-store/whats-new/ ; https://developer.apple.com/wwdc26/guides/app-store/
+- Knowledge: [[../Distribution/App-Store-Connect-and-Submission]]
+
+## APPLE-020 — Audit subscription multiseat defaults and iOS 27 purchase options
+- Status: ready
+- Priority: P1
+- Target: apps with auto-renewable subscriptions
+- Deployment gate: App Store Connect purchase-option configuration is current; customer-facing Volume Purchasing launches 2026-10-22 and Group Purchases are planned for winter 2026. Bundles/Suites require iOS/iPadOS/macOS/tvOS 27+ and Apple program approval/configuration.
+- Trigger: an app has auto-renewable subscriptions, especially if they predate 2026-09-14, use Family Sharing, or have not been migrated to StoreKit 2.
+- Action: review each subscription's multiseat setting and store availability in App Store Connect; verify StoreKit 2 support; document Family Sharing interaction; decide whether Apple Business/School/App Store multiseat should be enabled; separately evaluate whether Bundles/Suites fit the product and request access if appropriate.
+- Acceptance: purchase-option state is intentional and documented; no unintended store/renewal effect is introduced; sandbox/TestFlight subscription behavior remains correct; product/legal owners approve any Bundle/Suite program request.
+- Performance verification: not a runtime-performance task; verify entitlement, renewal, seat-assignment, Family Sharing, and storefront behavior.
+- Sources: https://developer.apple.com/news/ ; https://developer.apple.com/app-store/subscriptions/bundles-and-suites/ ; https://developer.apple.com/help/app-store-connect/manage-subscriptions/manage-purchase-options-for-auto-renewable-subscriptions/ ; https://developer.apple.com/help/app-store-connect/configure-in-app-purchase-settings/turn-on-family-sharing-for-in-app-purchases
+- Knowledge: [[../Distribution/App-Store-Connect-and-Submission]]
+
+## APPLE-021 — Prepare CI for the April 2027 SDK submission floor
+- Status: ready
+- Priority: P1
+- Target: apps submitted to App Store Connect for iOS/iPadOS/tvOS/visionOS/watchOS
+- Deployment gate: Apple's announced App Store Connect requirement begins April 2027.
+- Trigger: build/release automation still uses an SDK older than the OS 27 SDK family, or the team has not completed a clean build/test/submission rehearsal with Xcode 27-era SDKs.
+- Action: inventory release builders and pinned Xcode versions; migrate CI to an Xcode/toolchain that builds with the required 27 SDK family while preserving supported deployment targets; run archive/sign/notarization/TestFlight/App Store validation before the deadline.
+- Acceptance: production release pipeline builds, tests, archives, signs, and uploads with the required SDK generation; availability checks protect older deployment targets; rollback/reproducibility is documented.
+- Performance verification: compare build/test/CI reliability and duration before/after the toolchain migration; runtime performance changes require separate profiling.
+- Sources: https://developer.apple.com/news/
 - Knowledge: [[../Distribution/App-Store-Connect-and-Submission]]
