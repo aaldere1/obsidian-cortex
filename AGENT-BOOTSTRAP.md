@@ -1,5 +1,7 @@
 # Agent Bootstrap Runbook
 
+> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
+
 You are an AI agent. You are reading this because you've been asked to set yourself up to participate in the Obsidian-Vault brain. Follow this document top to bottom. Do not skip the self-check. Do not skip the verification at the end.
 
 This runbook is **document-as-script** — read it, execute it, verify, hand off to `AGENTS.md` for ongoing operation.
@@ -70,7 +72,7 @@ Decide which branches to run, in order:
 Then:
 
 ```sh
-cd "$(dirname <PATH>)" && git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git "$(basename <PATH>)"
+cd "$(dirname <PATH>)" && git clone https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git "$(basename <PATH>)"
 cd <PATH>
 ```
 
@@ -78,12 +80,12 @@ Verify:
 
 ```sh
 git remote -v
-# should show: origin  https://github.com/YOUR-USERNAME/obsidian-cortex.git
+# should show: origin  https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git
 ls "AI Brain"
 # should show: Daily/  Machines/  Projects/  Shared/  docs/  scripts/  templates/
 ```
 
-If the human wants this vault opened in the Obsidian app, tell them to do so manually now — you don't have a UI to open it. The vault will work for the agent regardless.
+If the human wants the private vault opened in the Obsidian app, tell them to do so manually now — you don't have a UI to open it. The vault will work for the agent regardless.
 
 Throughout the rest of this runbook, the symbol `<VAULT>` refers to whatever path the human gave.
 
@@ -281,7 +283,7 @@ Tell the human:
 - **CWD reset after every shell call**: the harness resets cwd to wherever it started, not where `cd` last left you. Always either chain `cd <VAULT> && ...` at the top of each Bash call, or use absolute paths.
 - **Surprise commits titled `vault backup: TIMESTAMP`**: the Obsidian Git plugin auto-commits every ~3 hours. If you `git add` a batch of files and a backup fires between your add and your commit, your changes will land in the backup commit instead of yours. Mitigation: chain `git add && git commit` in a single shell call.
 - **Working in a deleted directory**: if you `rm -rf` the directory you're currently in, your next command will error with "Working directory was deleted; shell cwd recovered". Just `cd <VAULT>` and retry.
-- **Case-insensitive macOS filesystem**: `~/Obsidian-Vault` and `/Users/YOUR-USERNAME/obsidian-cortex` are the same inode on macOS. Use the canonical capitalized form to match docs.
+- **Case-insensitive macOS filesystem**: `~/Obsidian-Vault` and `/Users/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO` are the same inode on macOS. Use the canonical capitalized form to match docs.
 - **Conflicts on `Current Activity.md` or `index.md`**: most common conflict files. Resolve by preserving both intents. For `Current Activity.md`, the newer `last_heartbeat` wins by default. For `index.md`, keep both new entries.
 
 ---

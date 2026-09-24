@@ -3,6 +3,9 @@ name: brain-startup
 description: Brief the agent on the current state of the Obsidian AI Brain at the start of meaningful work. Reads cross-machine snapshot, shared memory, this machine's context, and relevant project memory; creates a per-session activity record so concurrent tasks remain visible. Use when starting work on a project, when the user says "start a session", "starting a session", "begin session", "kick off", "let's get started", "what was I doing", "where did I leave off", "catch me up", "what's the current state", "what's the state of X", or at the beginning of any non-trivial session where you'd benefit from knowing prior decisions and context.
 ---
 
+**Private vault only.** This public skill is a reference. Before reading or writing brain state, resolve `BRAIN_VAULT` to the private `aaldere1/obsidian-personal` checkout and run `node "AI Brain/scripts/brain.mjs" --private-vault-path` from this public framework to verify its exact remote and private visibility. Run all brain commands in that verified private checkout. Stop if verification fails; never fall back to `obsidian-cortex`.
+
+
 # brain-startup
 
 Reads the Obsidian AI Brain at the start of a session and creates an independent activity record so other machines see every in-flight task.
@@ -23,7 +26,7 @@ Reads the Obsidian AI Brain at the start of a session and creates an independent
 Resolve the network hostname or alias to the canonical AI Brain folder:
 
 ```sh
-cd ~/Obsidian-Vault
+cd "$BRAIN_VAULT"
 node "AI Brain/scripts/brain.mjs" whoami
 ```
 
@@ -34,7 +37,7 @@ Use the reported `canonical:` value. The stable AI Brain name may differ from `h
 ### 1. Pull latest vault state
 
 ```sh
-cd ~/Obsidian-Vault
+cd "$BRAIN_VAULT"
 git pull --ff-only
 ```
 
@@ -136,7 +139,7 @@ Do not dump the raw memory at the user. Summarize.
 If the work session is going to be substantial, push so other machines see it:
 
 ```sh
-cd ~/Obsidian-Vault && git add "AI Brain/Machines/<MACHINE>/Activities/<SESSION_ID>.md" "AI Brain/Machines/<MACHINE>/Current Activity.md" && git commit -m "<MACHINE> startup: <focus>" && git push
+cd "$BRAIN_VAULT" && git add "AI Brain/Machines/<MACHINE>/Activities/<SESSION_ID>.md" "AI Brain/Machines/<MACHINE>/Current Activity.md" && git commit -m "<MACHINE> startup: <focus>" && git push
 ```
 
 For quick sessions, skip the push — the closeout will carry the activity with the session file.

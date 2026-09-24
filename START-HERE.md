@@ -1,6 +1,8 @@
 # 🪨 START HERE — Onboard a Machine in ~5 Minutes
 
-You're setting up a new computer to join your Obsidian Cortex brain (the shared vault your agents read on every machine).
+> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
+
+You're setting up a new computer to join the private Obsidian brain. This public repository is a reference for the workflow.
 
 **The fast way:** don't run these steps by hand. Open your AI agent (Claude Code or Codex) **inside the cloned vault** and paste the prompt below — it'll do the whole setup for you. The manual steps are here as a fallback and so you understand what's happening.
 
@@ -12,7 +14,7 @@ You're setting up a new computer to join your Obsidian Cortex brain (the shared 
 
    ```sh
    cd ~
-   git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
+   git clone https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git Obsidian-Vault
    cd Obsidian-Vault
    claude     # or: codex
    ```
@@ -56,7 +58,7 @@ Install with `brew install git node` (macOS) if missing. You also need clone acc
 ### 1. Clone
 ```sh
 cd ~
-git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
+git clone https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git Obsidian-Vault
 cd Obsidian-Vault
 ls "AI Brain"      # → Daily Machines Projects Shared docs scripts skills-claude-code templates
 ```

@@ -23,3 +23,19 @@ credentials.*
 
 # Node
 node_modules/
+
+# Public framework: prevent accidental staging of live brain state.
+/AI Brain/Knowledge/
+/AI Brain/Synthesis/
+/AI Brain/Machines/*
+!/AI Brain/Machines/_Template Machine/
+/AI Brain/Projects/*
+!/AI Brain/Projects/_EXAMPLE_README.md
+/AI Brain/Daily/*
+!/AI Brain/Daily/.gitkeep
+/AI Brain/Shared/*
+!/AI Brain/Shared/_EXAMPLE_Preferences.md
+!/AI Brain/Shared/_EXAMPLE_Profile.md
+/AI Brain/Wiki/
+/log.md
+/index.md

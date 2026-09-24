@@ -3,6 +3,9 @@ name: brain-closeout
 description: Wrap up a session by writing a structured summary to the Obsidian AI Brain, updating project state, and marking this machine idle. Triggers when the user says "wrap up", "we're done", "let's commit", "let's push", "closeout", "end session", "done for today", or signals end of meaningful work. Captures what changed, what was decided, and what's next so the next session (on any machine) can pick up cleanly.
 ---
 
+**Private vault only.** This public skill is a reference. Before reading or writing brain state, resolve `BRAIN_VAULT` to the private `aaldere1/obsidian-personal` checkout and run `node "AI Brain/scripts/brain.mjs" --private-vault-path` from this public framework to verify its exact remote and private visibility. Run all brain commands in that verified private checkout. Stop if verification fails; never fall back to `obsidian-cortex`.
+
+
 # brain-closeout
 
 Writes a structured session summary to the Obsidian AI Brain, updates project state, and marks this machine idle.
@@ -20,7 +23,7 @@ Writes a structured session summary to the Obsidian AI Brain, updates project st
 **Every example in this skill uses `<MACHINE>` as a placeholder.** You MUST substitute your actual machine name. Do NOT copy `"Laptop"` or any literal name from this doc.
 
 ```sh
-cd ~/Obsidian-Vault
+cd "$BRAIN_VAULT"
 node "AI Brain/scripts/brain.mjs" whoami
 ```
 
@@ -48,7 +51,7 @@ If you're unsure, run `git status` and `git log --oneline -10` in the project re
 ### 3. Run closeout
 
 ```sh
-cd ~/Obsidian-Vault
+cd "$BRAIN_VAULT"
 node "AI Brain/scripts/brain.mjs" closeout "<Project Name>" "<Session title>" "<MACHINE>" \
   --summary "<1–3 short bullets, newline-separated>" \
   --changes "<paths or areas touched>" \
@@ -98,7 +101,7 @@ If the current local time is past 5pm AND no `AI Brain/Daily/<today>.md` exists 
 Standing preference (from `AI Brain/Shared/Preferences.md`): commit and push vault updates by default on closeout. Only pause if `git status` shows unfamiliar or unrelated changes.
 
 ```sh
-cd ~/Obsidian-Vault && git status --short
+cd "$BRAIN_VAULT" && git status --short
 ```
 
 If everything in the status is from this session (closeout files + the vault paths you touched), commit and push without asking:

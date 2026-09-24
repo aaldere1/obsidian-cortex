@@ -1,5 +1,7 @@
 # AI Brain: How Session Startup & Closeout Work
 
+> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
+
 A short guide to the two moments that bookend every meaningful work session with the
 AI Brain: **startup** (loading context before we begin) and **closeout** (saving what
 happened when we finish). This is the mechanism that lets an AI agent pick up on any

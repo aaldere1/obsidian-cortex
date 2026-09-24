@@ -3,6 +3,8 @@
   <img src="assets/hero.jpg" alt="Obsidian Cortex" width="100%" />
 </p>
 
+> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
+
 <h1 align="center">🪨 Obsidian Cortex</h1>
 
 <p align="center">
@@ -83,10 +85,10 @@ You re-explain your stack. Your preferences. What you were doing yesterday. What
 
 > **Requirements:** [Obsidian](https://obsidian.md) + [Obsidian Git plugin](https://github.com/Vinzent03/obsidian-git) (for real-time multi-machine sync) · Git · Node 18+
 
-Don't run setup by hand. Clone the vault, open your AI agent **inside it**, and hand it the goal:
+Don't run setup by hand. Clone your **private brain** as the vault, open your AI agent inside it, and hand it the goal:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/obsidian-cortex.git Obsidian-Vault
+git clone https://github.com/YOUR-USERNAME/YOUR-PRIVATE-BRAIN-REPO.git Obsidian-Vault
 cd Obsidian-Vault
 claude        # or: codex
 ```
@@ -225,7 +227,7 @@ AI Brain/
 
 ## 🛠️ Multi-machine sync
 
-Each machine clones the same vault repo. Agents `git pull` on session start and `git push` on closeout — but for **real-time** background sync (so your desktop sees your laptop's changes seconds later, without an agent running), use the Obsidian Git plugin.
+Each machine clones the same private brain repo. Agents `git pull` on session start and `git push` on closeout — but for **real-time** background sync (so your desktop sees your laptop's changes seconds later, without an agent running), use the Obsidian Git plugin.
 
 ### 🔌 Required for multi-machine: the Obsidian Git plugin
 

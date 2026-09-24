@@ -1,5 +1,7 @@
 # Global Codex Instructions For AI Brain
 
+> **Public framework boundary:** This repository is a reference copy, not a live vault. All machine, project, session, daily, research, and agent-configuration writes belong in a verified private brain. For this owner the destination is private `aaldere1/obsidian-personal`. Set `BRAIN_VAULT` to that private checkout or let the public launcher resolve it. Stop if its identity or privacy cannot be verified. Never commit or push personal brain state to this public repository.
+
 Purpose: Tell Codex agents to use AI Brain without adding files to every project repo.
 
 On Laptop, the global Codex instruction file is:

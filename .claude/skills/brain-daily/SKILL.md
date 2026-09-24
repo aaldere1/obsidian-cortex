@@ -3,6 +3,9 @@ name: brain-daily
 description: Generate the end-of-day rollup of everything that happened across all machines and projects — sessions, decisions, wiki edits, open loops. Writes AI Brain/Daily/YYYY-MM-DD.md. Triggers when the user says "daily summary", "what did I do today", "end of day", "wrap up the day", "daily rollup", or any end-of-day review request. Can also be invoked from a cron schedule.
 ---
 
+**Private vault only.** This public skill is a reference. Before reading or writing brain state, resolve `BRAIN_VAULT` to the private `aaldere1/obsidian-personal` checkout and run `node "AI Brain/scripts/brain.mjs" --private-vault-path` from this public framework to verify its exact remote and private visibility. Run all brain commands in that verified private checkout. Stop if verification fails; never fall back to `obsidian-cortex`.
+
+
 # brain-daily
 
 End-of-day rollup. Reads today's session files, machine session logs, and vault log; writes a single daily summary file.
@@ -20,7 +23,7 @@ End-of-day rollup. Reads today's session files, machine session logs, and vault 
 **Every example in this skill uses `<MACHINE>` as a placeholder.** You MUST substitute your actual machine name. Do NOT copy `"Laptop"` or any literal name from this doc.
 
 ```sh
-cd ~/Obsidian-Vault
+cd "$BRAIN_VAULT"
 node "AI Brain/scripts/brain.mjs" whoami
 ```
 
@@ -29,7 +32,7 @@ Use the reported `canonical:` value. The stable AI Brain name may differ from `h
 ### 1. Run the daily command
 
 ```sh
-cd ~/Obsidian-Vault
+cd "$BRAIN_VAULT"
 node "AI Brain/scripts/brain.mjs" daily "<MACHINE>"
 ```
 
@@ -63,7 +66,7 @@ In 3–6 lines:
 If the user agrees:
 
 ```sh
-cd ~/Obsidian-Vault && git add "AI Brain/Daily" log.md && git commit -m "Daily summary $(date +%Y-%m-%d)" && git push
+cd "$BRAIN_VAULT" && git add "AI Brain/Daily" log.md && git commit -m "Daily summary $(date +%Y-%m-%d)" && git push
 ```
 
 ## Edge cases
