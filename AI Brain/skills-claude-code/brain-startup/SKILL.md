@@ -1,6 +1,6 @@
 ---
 name: brain-startup
-description: Brief the agent on the current state of the Obsidian AI Brain at the start of meaningful work. Reads cross-machine snapshot, shared memory, this machine's context, and relevant project memory; creates a per-session activity record so concurrent tasks remain visible. Use when starting work on a project, when the user says "start a session", "starting a session", "begin session", "kick off", "let's get started", "what was I doing", "where did I leave off", "catch me up", "what's the current state", "what's the state of X", or at the beginning of any non-trivial session where you'd benefit from knowing prior decisions and context.
+description: Brief the agent on the current state of the Obsidian AI Brain at the start of meaningful work. Reads cross-machine snapshot, shared memory, this machine's context, and relevant project memory; creates a per-session activity record so concurrent tasks remain visible. Use when the user starts or resumes a work session, asks to be caught up on what they or another machine were doing, or asks the state of a project — and at the start of any non-trivial session that would benefit from prior decisions and context.
 ---
 
 # brain-startup
@@ -50,7 +50,7 @@ node "AI Brain/scripts/brain.mjs" whoami
 
 Use the reported `canonical:` value. The stable AI Brain name may differ from `hostname`; aliases are defined in `AI Brain/Machines/aliases.json`. If `registered: no`, invoke the `brain-bootstrap` skill instead.
 
-**Use the matched folder name as `<MACHINE>` in every command below.** If you find yourself about to type the literal string `"Laptop"` in a command, STOP — that's the classic multi-machine bug: one machine overwriting another machine's Current Activity. Always substitute.
+**Use the matched folder name as `<MACHINE>` in every command below.** Never type a machine name copied from an example — writing under the wrong name overwrites another machine's Current Activity.
 
 ### 1. Pull latest vault state
 
@@ -60,6 +60,8 @@ git pull --ff-only
 ```
 
 If the pull fails or there are local changes, surface that to the user before proceeding.
+
+Then read `AI Brain/Shared/Fleet Apply Queue.md`: apply any Open item that affects this machine, record this machine and today's date under its **Applied on**, and push. A fleet-useful learning from this session goes back into the queue the same way.
 
 ### 2. Check who's doing what across machines
 
@@ -168,11 +170,5 @@ For quick sessions, skip the push — the closeout will carry the activity with 
 - Read **only what's relevant** — do not bulk-load session history unless the user asks
 - If you're already mid-session and the user invokes this, do the snapshot + brief but do not create a second activity file for the same task
 
-
-## Graph tighten (2026-09-22)
-- Seat handoffs: Brain note path + “read the note — don’t trust my summary.”
-- Live projects/sessions: require `Stop when:`.
-
-## Fleet Apply Queue (2026-09-22)
-
-After pull, read `AI Brain/Shared/Fleet Apply Queue.md`. Apply any Open items that affect this machine (habits, template awareness, locks). Mark **Applied on** with this machine name + date, then push. If this session produced a fleet-useful learning, add an Open item (or Shared lock + link) and push — don’t leave it chat-only.
+- When handing work to another agent, give it the Brain note path and tell it to read the note rather than trusting your summary.
+- A live project or session carries an explicit `Stop when:` done condition.

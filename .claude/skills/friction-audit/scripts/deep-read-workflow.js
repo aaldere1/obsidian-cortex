@@ -52,6 +52,6 @@ Known signal counts: ${s.signals}
 
 Reconstruct: (a) what the user was trying to do, (b) each concrete friction event, (c) whether the cause was Claude's behavior (stopped early, wrong target, didn't verify), tooling (build failures, permission prompts, file-not-read errors), or environment (API blips, device issues). Focus on the USER's experience.
 
-Your final output is consumed programmatically — return ONLY the structured object per the schema. Quotes under 200 chars. Cap events at 8, most costly first.`, { label: `read:${s.label}`, phase: 'DeepRead', schema: SCHEMA })))
+Quotes under 200 chars. Cap events at 8, most costly first.`, { label: `read:${s.label}`, phase: 'DeepRead', schema: SCHEMA })))
 
 return results
