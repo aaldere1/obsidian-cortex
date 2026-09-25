@@ -50,12 +50,9 @@ loud `warning: ambiguous machine identity` when `hostname` and `LocalHostName` r
 different machine folders — if you see that, the machine name is genuinely uncertain and you
 should confirm before writing anything.
 
-Why this matters: on Old-Laptop, `os.hostname()` returned literally `Mac`, which is **Laptop's folder** —
-a different, live machine — because macOS `HostName` was unset and the name fell back to a
-DHCP-derived value. Before 2026-08-30 `whoami` reported `canonical: Mac` there, so following
-this step exactly would have written Old-Laptop's records into Laptop's. `brain.mjs` now prefers the alias
-hit on `LocalHostName` and warns on the collision, but the lesson stands: **if the name looks
-like another machine, stop and check `aliases.json`.**
+`hostname` can fall back to a value that matches a *different* machine's folder (macOS with
+`HostName` unset), so **if the resolved name looks like another machine, stop and check
+`aliases.json`** before writing.
 
 If you find yourself about to copy a literal machine name from an example, stop and use the
 resolved canonical value.
@@ -71,12 +68,8 @@ project files you are about to edit — `Current State.md`, `Next Steps.md` — 
 machine in the fleet, so a session that started hours ago is editing a stale base and its commit
 will collide on rebase at push time.
 
-*Evidence: Desktop hit this twice. 2026-08-20 — `CONFLICT (content): Merge conflict in AI Brain/
-Projects/Obsidian-AI-Brain/Current State.md / error: could not apply eda4d4ab… Desktop closeout`.
-2026-08-31 — the same two files came back `UU` mid-rebase because another machine had
-consolidated the project while the session was running.* Pulling here does not remove the race,
-but it narrows the window from the whole session to the closeout itself, and would have avoided
-both. If the pull brings changes that alter what you were going to write, re-read the project
+Pulling here does not remove the race, but it narrows the window from the whole session to the
+closeout itself. If the pull brings changes that alter what you were going to write, re-read the project
 files before drafting — the state you remember may already be gone.
 
 ### 1. Draft the summary from the session itself
@@ -117,8 +110,7 @@ This writes `AI Brain/Projects/<Project>/Sessions/YYYY-MM-DD-HHMM-<slug>.md` AND
 
 The `--had-commits` / `--had-edits` / `--had-pr` / `--duration-band` flags feed the optional Jev
 closeout-richness gate (advisory, never blocks). Pass the ones that are true — the command does not
-infer them, so a closeout without them always reads as "not rich" (noul ≈ 0.03) even for a session
-that shipped two PRs (observed 2026-09-19).
+infer them, so a closeout without them always reads as "not rich", even for a session that shipped.
 If a caller omits a field, the helper writes an explicit `Unknown — caller omitted ...` marker rather
 than a scaffold `TODO`; reconcile any such marker before committing or marking the activity idle.
 
@@ -176,10 +168,9 @@ git push
 **Never fabricate a git identity to get past a stop.** Git refuses to commit when no
 `user.email` is configured — that refusal is a feature, and it is *not* the failure mode.
 The failure mode is an agent routing around it by supplying a placeholder inline, e.g.
-`git -c user.name="Old-Laptop handover" -c user.email="noreply@localhost" commit`. That is exactly
-what happened in the 2026-08-30 Old-Laptop decommission: it produced unattributable commits across
-22 repos and blocked Vercel builds on 12 projects. Such an identity can't be attributed on
-GitHub and won't pass author-gated deploys. Stop and ask the user instead — always.
+`git -c user.name="handover" -c user.email="noreply@localhost" commit`. Such an identity can't be
+attributed on GitHub and won't pass author-gated deploys, and it spreads to every repo the agent
+touches. Stop and ask the user instead.
 
 Note `user.useConfigOnly=true` hardens the *other* half of this (it disables git's own
 hostname/GECOS guessing, which can otherwise succeed silently on a machine whose hostname
@@ -197,7 +188,4 @@ Only `git add` the paths you actually touched. If `git status` shows changes you
 - Decisions go in `Decisions.md` (durable, with rationale), not in `Current State.md`
 - If you don't know the project name and can't infer it: ask the user before writing — wrong project routing pollutes memory
 
-
-## Graph tighten (2026-09-22)
-- Seat handoffs: Brain note path + “read the note — don’t trust my summary.”
-- Live projects/sessions: require `Stop when:`.
+- Handoffs to another agent point at the Brain note path ("read the note — don't trust my summary"); live projects and session notes carry a `Stop when:`.

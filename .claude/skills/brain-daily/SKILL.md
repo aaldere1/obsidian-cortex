@@ -50,12 +50,9 @@ loud `warning: ambiguous machine identity` when `hostname` and `LocalHostName` r
 different machine folders — if you see that, the machine name is genuinely uncertain and you
 should confirm before writing anything.
 
-Why this matters: on Old-Laptop, `os.hostname()` returned literally `Mac`, which is **Laptop's folder** —
-a different, live machine — because macOS `HostName` was unset and the name fell back to a
-DHCP-derived value. Before 2026-08-30 `whoami` reported `canonical: Mac` there, so following
-this step exactly would have written Old-Laptop's records into Laptop's. `brain.mjs` now prefers the alias
-hit on `LocalHostName` and warns on the collision, but the lesson stands: **if the name looks
-like another machine, stop and check `aliases.json`.**
+`hostname` can fall back to a value that matches a *different* machine's folder (macOS with
+`HostName` unset), so **if the resolved name looks like another machine, stop and check
+`aliases.json`** before writing.
 
 If you find yourself about to copy a literal machine name from an example, stop and use the
 resolved canonical value.
@@ -114,6 +111,3 @@ cd "$VAULT" && git add "AI Brain/Daily" log.md && git commit -m "Daily summary $
 - Daily files are TL;DRs, not archives — the session files under `Projects/*/Sessions/` are the source of truth
 - If the user wants weekly or monthly rollups later, that's a separate enhancement — `brain-daily` only does single days
 
-
-## Fleet Apply Queue (2026-09-22)
-Pull SoT, read `Shared/Fleet Apply Queue.md`, apply open items, mark machine + date, push. Write fleet learnings back the same way.
